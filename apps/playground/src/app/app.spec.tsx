@@ -8,10 +8,10 @@ describe('App', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('should have a greeting as the title', () => {
-    const { getAllByText } = render(<App />);
-    expect(
-      getAllByText(new RegExp('Welcome @org/playground', 'gi')).length > 0,
-    ).toBeTruthy();
+  it('renders the virtualized grid and its shared scrollport', () => {
+    const { getByTestId, getByText } = render(<App />);
+
+    expect(getByTestId('grid-scrollport')).toBeTruthy();
+    expect(getByText('Grid')).toBeTruthy();
   });
 });
