@@ -45,12 +45,36 @@ function distribution(values: number[]) {
   };
 }
 
+// Select one mode per controlled run; leave unset for the existing default URL.
+const requestedFlushSync = process.env['GRID_FLUSH_SYNC'];
+const diagnosticUrl =
+  requestedFlushSync === undefined ? '/' : `/?flushSync=${requestedFlushSync}`;
+
+test.afterEach(async ({ page }) => {
+  // Also release the observer/listener/rAF when input or assertions fail.
+  if (!page.isClosed()) {
+    await page.evaluate(() => window.scrollTrace?.stop());
+  }
+});
+
 for (const input of ['programmatic', 'wheel'] as const) {
   test(`locates scroll delay with ${input} input`, async ({
     page,
   }, testInfo) => {
-    await page.goto('/');
+    // Validate only when this diagnostic runs, not during unrelated test collection.
+    if (
+      requestedFlushSync !== undefined &&
+      requestedFlushSync !== '0' &&
+      requestedFlushSync !== '1'
+    ) {
+      throw new Error('GRID_FLUSH_SYNC must be unset, 0, or 1');
+    }
+    await page.goto(diagnosticUrl);
     await expect(page.getByTestId('grid-canvas')).toBeVisible();
+    await expect(page.getByTestId('grid-canvas')).toHaveAttribute(
+      'data-flush-sync-enabled',
+      String(requestedFlushSync === '1'),
+    );
     await page.evaluate(() => {
       const scrollport = document.querySelector<HTMLDivElement>(
         '[data-testid="grid-scrollport"]',
@@ -68,7 +92,8 @@ for (const input of ['programmatic', 'wheel'] as const) {
       };
       window.scrollTrace = trace;
       let lastId = 0;
-      const observer = new MutationObserver(() => {
+      let stopped = false;
+      const recordCommit = () => {
         const id = Number(canvas.dataset.scrollEventId);
         if (id === lastId) return;
         lastId = id;
@@ -81,7 +106,8 @@ for (const input of ['programmatic', 'wheel'] as const) {
           top: Number(canvas.dataset.renderedScrollTop),
           left: Number(canvas.dataset.renderedScrollLeft),
         });
-      });
+      };
+      const observer = new MutationObserver(recordCommit);
       observer.observe(canvas, {
         attributes: true,
         attributeFilter: ['data-react-commit-at'],
@@ -119,7 +145,12 @@ for (const input of ['programmatic', 'wheel'] as const) {
       };
       raf = requestAnimationFrame(sample);
       trace.stop = () => {
+        if (stopped) return;
+        stopped = true;
         cancelAnimationFrame(raf);
+        // MutationObserver delivery may still be pending at collection shutdown.
+        observer.takeRecords();
+        recordCommit();
         observer.disconnect();
         scrollport.removeEventListener('scroll', onScroll);
       };
@@ -135,9 +166,10 @@ for (const input of ['programmatic', 'wheel'] as const) {
             if (!scrollport) throw new Error('Missing grid');
             let frame = 0;
             const advance = () => {
+              const at = performance.now();
               scrollport.scrollTop += 800;
               window.scrollTrace.writes.push({
-                at: performance.now(),
+                at,
                 top: scrollport.scrollTop,
                 left: scrollport.scrollLeft,
               });
@@ -180,7 +212,40 @@ for (const input of ['programmatic', 'wheel'] as const) {
     const trace = await page.evaluate(() => {
       window.scrollTrace.stop();
       const { commits, events, writes, frames } = window.scrollTrace;
-      return { commits, events, writes, frames };
+      const canvas = document.querySelector<HTMLDivElement>(
+        '[data-testid="grid-canvas"]',
+      );
+      const scrollport = document.querySelector<HTMLDivElement>(
+        '[data-testid="grid-scrollport"]',
+      );
+      if (!canvas || !scrollport) throw new Error('Missing grid');
+      return {
+        commits,
+        events,
+        writes,
+        frames,
+        actualFlushSyncEnabled: canvas.dataset.flushSyncEnabled,
+        finalViewport: {
+          top: scrollport.scrollTop,
+          left: scrollport.scrollLeft,
+          committedTop: Number(canvas.dataset.renderedScrollTop),
+          committedLeft: Number(canvas.dataset.renderedScrollLeft),
+          covered:
+            Number(canvas.dataset.rowStart) <=
+              Math.floor(scrollport.scrollTop / 40) &&
+            Number(canvas.dataset.rowEnd) >=
+              Math.ceil((scrollport.scrollTop + scrollport.clientHeight) / 40) &&
+            Number(canvas.dataset.columnStart) <=
+              Math.floor(scrollport.scrollLeft / 120) &&
+            Number(canvas.dataset.columnEnd) >=
+              Math.ceil((scrollport.scrollLeft + scrollport.clientWidth - 480) / 120),
+        },
+        finalDom: {
+          rows: canvas.querySelectorAll('[data-testid="grid-row"]').length,
+          cells: canvas.querySelectorAll('[data-testid="grid-cell"]').length,
+          descendants: canvas.querySelectorAll('*').length,
+        },
+      };
     });
     const writeToEvent = trace.commits.flatMap((commit) => {
       const write = trace.writes.find(
@@ -189,8 +254,22 @@ for (const input of ['programmatic', 'wheel'] as const) {
       return write ? [commit.eventAt - write.at] : [];
     });
     const summary = {
+      schemaVersion: 2,
       input,
       browser: testInfo.project.name,
+      url: page.url(),
+      requestedFlushSync: requestedFlushSync ?? 'absent',
+      flushSyncEnabled: trace.actualFlushSyncEnabled === 'true',
+      requestedBuildMode:
+        process.env['GRID_TEST_PRODUCTION'] === '1' ? 'production' : 'development',
+      finalDom: trace.finalDom,
+      finalViewport: trace.finalViewport,
+      // Callback gaps are observations, not painted/dropped frame counts.
+      rafCallbackGapMs: distribution(
+        trace.frames
+          .slice(1)
+          .map((frame, index) => frame.at - trace.frames[index].at),
+      ),
       scrollEvents: trace.events.length,
       commits: trace.commits.length,
       frames: trace.frames.length,
@@ -215,13 +294,25 @@ for (const input of ['programmatic', 'wheel'] as const) {
     });
     console.log('SCROLL_DELAY', JSON.stringify(summary));
     expect(trace.commits.length).toBeGreaterThan(0);
+    expect(trace.actualFlushSyncEnabled).toBe(String(requestedFlushSync === '1'));
     expect(
       trace.commits.every(
         (commit) =>
+          Number.isInteger(commit.id) &&
+          commit.id > 0 &&
+          Number.isFinite(commit.top) &&
+          Number.isFinite(commit.left) &&
+          Number.isFinite(commit.eventAt) &&
+          Number.isFinite(commit.renderAt) &&
+          Number.isFinite(commit.commitAt) &&
+          Number.isFinite(commit.calculationMs) &&
+          commit.calculationMs >= 0 &&
           commit.eventAt <= commit.renderAt &&
           commit.renderAt <= commit.commitAt,
       ),
     ).toBe(true);
-    expect(trace.frames.at(-1)?.covered).toBe(true);
+    expect(trace.finalViewport.committedTop).toBe(trace.finalViewport.top);
+    expect(trace.finalViewport.committedLeft).toBe(trace.finalViewport.left);
+    expect(trace.finalViewport.covered).toBe(true);
   });
 }
