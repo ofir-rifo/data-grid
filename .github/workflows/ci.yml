@@ -1,40 +1,55 @@
 name: CI
-
 on:
-  push:
-    branches:
-      - main
   pull_request:
-
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 permissions:
-  actions: read
   contents: read
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  CI: 'true'
+  NX_DAEMON: 'false'
+  NX_NO_CLOUD: 'true'
+  NX_SKIP_REMOTE_CACHE: 'true'
+  NX_SKIP_NX_CACHE: 'true'
+  NX_ISOLATE_PLUGINS: 'false'
+  NX_PARALLEL: '1'
+  NODE_OPTIONS: --max-old-space-size=2048
 jobs:
-  main:
-    runs-on: ubuntu-latest
+  checks:
+    name: DataGrid checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          filter: tree:0
-          fetch-depth: 0
-
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e"
-
-      # Cache node_modules
-      - uses: actions/setup-node@v5
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
-          cache: 'npm'
-
-      - run: npm ci
-
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck application, unit tests and browser tests
+        run: pnpm nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1
+      - name: Lint playground
+        run: pnpm nx run @org/playground:lint --excludeTaskDependencies --skipSync --parallel=1
+      - name: Unit tests
+        run: pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"
+      - name: Verify Vite bundle
+        run: pnpm nx run @org/playground:build --excludeTaskDependencies --skipSync --parallel=1
+      - name: Install Chromium on runner
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Bounded Chromium regressions
+        timeout-minutes: 3
+        env:
+          GRID_TEST_PRODUCTION: '0'
+          BASE_URL: http://localhost:4200
+          PLAYWRIGHT_HTML_OPEN: never
+          PWDEBUG: '0'
+        run: pnpm nx run @org/playground:e2e --excludeTaskDependencies --skipSync --parallel=1 --args="e2e/flush-sync.spec.ts e2e/row-overflow.spec.ts --project=chromium --workers=1 --retries=0 --trace=off --reporter=line --global-timeout=120000 --timeout=30000"

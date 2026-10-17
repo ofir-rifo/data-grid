@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
+  "packageManager": "pnpm@12.5.1",
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nx/devkit": "23.2.1",

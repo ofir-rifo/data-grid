@@ -11,7 +11,7 @@ Current phase: playground POC-V1 for fixed-geometry 2D virtualization and fast-s
 ## Repository checkpoint
 
 - Repository: `C:\Users\ofirr\dev\table\data-grid`.
-- Branch: `main`.
+- Branch at CI preparation: `ci/datagrid-foundation`, based on `origin/main` at `3cc5b917f4fc55677cc877145ccb31630aec8ebc`. Recheck Git for the current tip.
 - Checkpoint base: `524290a4574321c00c84617e504e21cfe9901e74` — `feat(playground): add scroll diagnostics and opt-in flushSync experiment`. The authorized checkpoint below records subsequent containment/regression/documentation work; use current Git history for the final checkpoint tip.
 - Containment implementation checkpoint: `0820ed7cfd65dca590a59a150275c264403eeaec` — `fix(playground): contain virtualized cell overflow`.
 - Regression/diagnostic checkpoint: `0133ac172d5b6c6c36bb14f93a0c9725e55d0ce3` — `test(playground): add flushSync regressions and scroll diagnostics`.
@@ -492,6 +492,47 @@ This document is committed in group C; the separately committed foundation propo
 ## Single next recommendation — awaiting scope/execution approval
 
 Next recommended milestone: review the verified POC containment change, then separately authorize a bounded native-scroll evidence plan/run to resolve the fast-scroll/paint question and scheduling trade-off. Do not repeat passing geometry regressions without a new reason or enable flushSync by default. Production implementation still requires the documented POC exit decision and approval of the proposed foundation contract.
+
+## CI foundation — 2026-10-17
+
+Authorized scope: feature-branch CI/configuration/documentation, bounded relevant
+validation, branch push and PR creation. This supersedes the earlier blanket
+execution/commit restriction only for this milestone. No application behavior,
+default-off flushSync, POC decision or production implementation is changed.
+
+Prepared on `ci/datagrid-foundation` from `3cc5b91` (`origin/main`). See [CI contract](CI.md)
+for exact checks, conventions and proposed squash policy. PR CI replaces the old
+npm/Nx Cloud distributed template with pinned pnpm, frozen installation, sequential
+Nx checks, one hosted Vite build and six bounded Chromium regressions. Separate
+read-only conventions workflow checks PR titles and every commit in the actual
+base/head range, including multi-commit PRs and excluding synthetic merge commits.
+Conventions title edits do not repeat browser work. No branch rules/settings changed.
+
+Local validation (Windows, Node v26.5.0, pnpm 12.5.1; daemon/cloud/cache disabled,
+one Nx task at a time, 2 GB Node old-space):
+
+- `node --test .github/scripts/check-conventions.test.mjs`: 3 passed. Initial sandbox
+  run could not write temporary Git metadata; rerun outside sandbox passed.
+- `pnpm nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1`:
+  passed, declaration-only TypeScript project-reference checks.
+- `pnpm nx run @org/playground:lint --excludeTaskDependencies --skipSync --parallel=1`:
+  passed, zero errors / nine existing conditional-in-test warnings in diagnostic files.
+- `pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"`:
+  6 files / 27 tests passed (3.62s Vitest duration).
+- Both workflow YAML files parsed; PR events/read-only permissions checked.
+  Lockfile's existing application document is byte-equivalent after newline normalization;
+  pnpm added only its pinned bootstrap document. No application dependency installation
+  or local browser/build/benchmark was performed in this milestone.
+
+Publication and real GitHub Actions outcomes must be recorded from the remote after
+PR creation; local checks do not establish runner success. CI's development-browser
+regressions and bundle compilation are separate checks, not production-browser evidence.
+The POC is **not formally VALIDATED**; painted frames, scheduling cost, memory,
+scalability and the reviewed exit decision remain pending. BSODs remain unexplained.
+
+Next recommendation: review real hosted CI outcomes, then separately approve main
+branch rules/merge settings and advisory AI review permissions. No settings approval
+or further POC workload is implied by this CI implementation.
 
 ## Resume and continue
 
