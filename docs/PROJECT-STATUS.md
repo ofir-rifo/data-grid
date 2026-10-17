@@ -524,8 +524,13 @@ one Nx task at a time, 2 GB Node old-space):
   pnpm added only its pinned bootstrap document. No application dependency installation
   or local browser/build/benchmark was performed in this milestone.
 
-Publication and real GitHub Actions outcomes must be recorded from the remote after
-PR creation; local checks do not establish runner success. CI's development-browser
+Published PR: https://github.com/ofir-rifo/data-grid/pull/1, feature branch
+`ci/datagrid-foundation`; main is unchanged. Initial hosted conventions run
+`39068816589` failed during Node setup: implicit package-manager caching tried to
+invoke pnpm in the dependency-free job. Explicitly disabling that cache fixes the
+configuration without installing dependencies there. Initial main CI frozen install
+succeeded. Final hosted results must be checked on the current PR head; local checks
+do not establish runner success. CI's development-browser
 regressions and bundle compilation are separate checks, not production-browser evidence.
 The POC is **not formally VALIDATED**; painted frames, scheduling cost, memory,
 scalability and the reviewed exit decision remain pending. BSODs remain unexplained.
