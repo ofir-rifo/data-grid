@@ -464,3 +464,15 @@ ARCHITECTURE CHANGE REQUIRED
 ```
 
 The result must be documented before production virtualization implementation begins.
+
+---
+
+# 20. Fixed-Cell Content Containment — POC Correction
+
+Authorized POC correction, 2026-10-17: cell content must not extend the native scrollable area beyond the fixed logical canvas. All left, center, and right cell boxes use `overflow: clip`. Row/column dimensions, buffers, borders, padding, wrapping, logical identity, and default-off flushSync remain unchanged.
+
+This resolves measured final-row text overflow that increased scrollHeight from 4,000,000 to 4,000,004. It clips visually overflowing text rather than resizing rows, forcing nowrap, adding ellipsis, or changing the virtualizer. Full text remains in the DOM; no `aria-hidden` or focusability changes are introduced. Text Range bounds/internal cell scrollHeight may still exceed the cell box; containment concerns propagation to the grid scroll extent and clipped paint, not removal of text layout.
+
+Trade-off: content beyond the fixed cell box is no longer visible. The POC has no interactive cell controls or cell focus ring; a production renderer must separately specify accessible full-value presentation and unclipped focus indicators. This POC correction does not adopt the proposed production single-line default or claim screen-reader verification.
+
+Regression evidence must cover default and enabled modes, unchanged logical scroll extents before/after final-row mounting, cell dimensions/styles/text preservation, and existing scrolling/pinned-alignment behavior. See the dated containment milestone in `docs/PROJECT-STATUS.md` for actual commands/results. Passing those checks does not satisfy the remaining memory/performance/scalability and native-paint exit requirements.
