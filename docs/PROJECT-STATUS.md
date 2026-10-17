@@ -555,6 +555,64 @@ Next recommendation: review real hosted CI outcomes, then separately approve mai
 branch rules/merge settings and advisory AI review permissions. No settings approval
 or further POC workload is implied by this CI implementation.
 
+## Engineering standards follow-up — 2026-10-18
+
+Authorized on the same open PR #1 / `ci/datagrid-foundation`, from `79dbc63`;
+do not merge or change protection settings. Scope includes the four pinned policy
+tools, configuration, isolated policy tests, documentation, bounded checks and
+feature-branch publication. Application implementation, default-off flushSync and
+the **not formally VALIDATED** POC status are unchanged.
+
+See [Engineering standards](ENGINEERING-STANDARDS.md) for enforced rules, safe
+type-only import fixing, precise legacy styling/underscore-parameter exceptions,
+report-only Knip limitations and staged cleanup proposals. The root inventory checks
+unimported tracked/non-ignored files and uses nearest ESLint configs to preserve
+React/Playwright rules. CI replaces its duplicate app lint step with this inventory,
+adds nine policy tests and an advisory, timeout-bounded Knip step. Existing
+unit/build/six-case Chromium checks and multi-commit conventions validation remain.
+
+Bounded local results (Windows / Node 26.5.0 / pnpm 12.5.1, daemon/cloud/cache off,
+2 GB per-process Node old-space, serial Nx tasks, common flags
+`--excludeTaskDependencies --skipSync --parallel=1`):
+
+- `pnpm nx run @org/playground:standards-test`: **9 passed**, latest duration 2.35s.
+  Initial Promise-misuse fixture used DOM TimerHandler, which does not promise a
+  void callback; corrected the fixture to an explicit void-callback contract and
+  separately checked valid rejection handling. No application issue or assertion
+  weakening was involved. Comment-only empty bodies also fail; parameter-property
+  constructors retain their real initialization semantics.
+- `pnpm nx run @org/playground:standards`: **passed**, 37 source / 2 style files,
+  zero errors and nine existing Playwright conditional warnings. Initial unused
+  audit flagged five intentional positional/interface `_` parameters; documented
+  the conventional parameter-only exception, with negative tests for unused locals
+  and used underscore parameters. No source code was changed to silence checks.
+- `pnpm nx run @org/playground:typecheck`: **passed** with unused-parameter and
+  unreachable-code checking added.
+- `pnpm nx run @org/playground:test --args="--run --maxWorkers=1 --no-file-parallelism"`:
+  **6 files / 27 tests passed**, 3.44s. No local browser/build/performance run.
+- `pnpm nx run @org/playground:dead-code-report`: completed report-only, exit 0;
+  five unused-file candidates plus dependency/export/type findings and configuration
+  hints. Includes known modeling limitations; not proof that the HTML-linked global
+  stylesheet or Nx tooling dependencies can be removed. No cleanup performed.
+- `pnpm peers check`: passed after a targeted, in-range update of two CSS tooling
+  transitive peers. No broad dependency upgrade. Required pinned tools installed;
+  existing ESLint 9 deprecation and old `whatwg-encoding` warning remain upgrade debt.
+
+Read-only GitHub verification: PR open on the expected branch, public personal repo;
+rulesets and effective main rules empty, classic protection GET 404, merge/squash/rebase
+all enabled. Existing required-check candidates are `DataGrid checks` and
+`Conventional commits`, both GitHub Actions integration 15368. Exact recommended
+main/squash settings are documented; no protection/settings mutation performed.
+
+This is the pre-publication evidence record for the follow-up commit. Actual
+current-head hosted results must be confirmed on PR #1 after push and reported
+separately; earlier green runs do not establish this commit's results. No instability
+was apparent during bounded commands; the prior BSOD cause remains undiagnosed.
+
+Next recommendation: review this policy PR and its actual current-head checks, then
+separately approve protection/squash settings. Legacy-style/Knip cleanup and POC exit
+work require their own scope; no further implementation is approved here.
+
 ## Resume and continue
 
 1. Read `AGENTS.md`, this status, the linked specifications, then current Git status/log and relevant source. Preserve existing changes and recheck outdated checkpoint claims.

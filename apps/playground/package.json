@@ -4,6 +4,24 @@
   "private": true,
   "nx": {
     "targets": {
+      "standards": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node tools/engineering/check-standards.mjs"
+        }
+      },
+      "standards-test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node --test --test-concurrency=1 tools/engineering/standards.test.mjs"
+        }
+      },
+      "dead-code-report": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "knip --no-exit-code --no-progress"
+        }
+      },
       "e2e": {
         "executor": "nx:run-commands",
         "options": {

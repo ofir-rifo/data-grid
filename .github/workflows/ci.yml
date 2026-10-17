@@ -37,8 +37,16 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck application, unit tests and browser tests
         run: pnpm nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1
-      - name: Lint playground
-        run: pnpm nx run @org/playground:lint --excludeTaskDependencies --skipSync --parallel=1
+      - name: Engineering policy tests
+        timeout-minutes: 2
+        run: pnpm nx run @org/playground:standards-test --excludeTaskDependencies --skipSync --parallel=1
+      - name: Engineering standards (ESLint, Stylelint, file policy)
+        timeout-minutes: 2
+        run: pnpm nx run @org/playground:standards --excludeTaskDependencies --skipSync --parallel=1
+      - name: Dead-code report (advisory)
+        timeout-minutes: 2
+        continue-on-error: true
+        run: pnpm nx run @org/playground:dead-code-report --excludeTaskDependencies --skipSync --parallel=1
       - name: Unit tests
         run: pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"
       - name: Verify Vite bundle

@@ -19,7 +19,13 @@ The workflow runs the existing `@org/playground` Nx targets:
 
 1. `typecheck`: TypeScript build mode, declaration-only; covers app, unit-test and
    Playwright project references. This is not a Vite application build.
-2. `lint`: full playground ESLint; existing warnings are reported, errors fail.
+2. `standards-test` and `standards`: positive/negative engineering policy tests,
+   full authored-file ESLint (including the playground's existing config),
+   SCSS Stylelint and stylesheet filename inventory; existing warnings are reported,
+   errors fail. [Engineering standards](ENGINEERING-STANDARDS.md) defines rules,
+   exceptions, safe import fixing and the unimported-file checks.
+   `dead-code-report` runs Knip advisory-only with a two-minute timeout; findings
+   and tool failures are visible but non-blocking during evaluation.
 3. `test`: the six existing Vitest files (27 tests at this checkpoint), one worker,
    no file parallelism, no watch mode.
 4. `build`: one Vite bundle verification on the hosted runner, catching bundling
