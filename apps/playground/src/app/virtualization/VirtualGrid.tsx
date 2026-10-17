@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { calculateRenderWindow } from './engine/calculate-render-window';
 import { createFixedGeometry } from './engine/geometry';
 import { createColumnRegions } from './engine/column-regions';
@@ -14,6 +15,21 @@ const VIEWPORT_HEIGHT = 600;
 
 const PINNED_LEFT_COUNT = 2;
 const PINNED_RIGHT_COUNT = 2;
+
+const ROW_BUFFER_OPTIONS = [400, 800, 1_200] as const;
+const COLUMN_BUFFER_OPTIONS = [0, 240, 600, 1_200] as const;
+
+function getBufferFromQuery<T extends readonly number[]>(
+  name: string,
+  options: T,
+  fallback: T[number],
+): T[number] {
+  const requested = Number(
+    new URLSearchParams(window.location.search).get(name),
+  );
+
+  return options.find((option) => option === requested) ?? fallback;
+}
 
 const columns = Array.from({ length: COLUMN_COUNT }, (_, index) => ({
   columnId: `column-${index}`,
@@ -38,13 +54,77 @@ const columnGeometry = createFixedGeometry({
 });
 
 export function VirtualGrid() {
-  const [scrollPosition, setScrollPosition] = useState<ScrollPosition>({
+  const [flushSyncEnabled] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('flushSync') === '1',
+  );
+  const renderStartedAt = performance.now();
+  const rowBuffer = getBufferFromQuery(
+    'rowBuffer',
+    ROW_BUFFER_OPTIONS,
+    ROW_BUFFER_OPTIONS[0],
+  );
+  const columnBuffer = getBufferFromQuery(
+    'columnBuffer',
+    COLUMN_BUFFER_OPTIONS,
+    COLUMN_BUFFER_OPTIONS[0],
+  );
+  const [scrollPosition, setScrollPosition] = useState<
+    ScrollPosition & {
+      eventId: number;
+      eventAt: number;
+    }
+  >({
     scrollLeft: 0,
     scrollTop: 0,
+    eventId: 0,
+    eventAt: 0,
   });
   const [viewport, setViewport] = useState({
     width: VIEWPORT_WIDTH,
     height: VIEWPORT_HEIGHT,
+  });
+  const scrollEventId = useRef(0);
+  const scrollMetricsRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (scrollPosition.eventId === 0 || scrollMetricsRef.current === null) {
+      return;
+    }
+
+    const reactCommitAt = performance.now();
+    scrollMetricsRef.current.dataset.scrollEventId = String(
+      scrollPosition.eventId,
+    );
+    scrollMetricsRef.current.dataset.lastScrollEventAt = String(
+      scrollPosition.eventAt,
+    );
+    scrollMetricsRef.current.dataset.reactCommitAt = String(reactCommitAt);
+    scrollMetricsRef.current.dataset.scrollToRenderMs = (
+      reactCommitAt - scrollPosition.eventAt
+    ).toFixed(2);
+    scrollMetricsRef.current.dataset.renderedScrollTop = String(
+      scrollPosition.scrollTop,
+    );
+    scrollMetricsRef.current.dataset.renderedScrollLeft = String(
+      scrollPosition.scrollLeft,
+    );
+    scrollMetricsRef.current.dataset.renderedViewportWidth = String(
+      viewport.width,
+    );
+    scrollMetricsRef.current.dataset.renderedViewportHeight = String(
+      viewport.height,
+    );
+    scrollMetricsRef.current.dataset.renderStartedAt = String(renderStartedAt);
+    scrollMetricsRef.current.dataset.windowCalculationMs =
+      String(windowCalculationMs);
+    scrollMetricsRef.current.dataset.eventToRenderStartMs = String(
+      renderStartedAt - scrollPosition.eventAt,
+    );
+    scrollMetricsRef.current.dataset.renderStartToCommitMs = String(
+      reactCommitAt - renderStartedAt,
+    );
   });
 
   const pinnedLeftWidth = columnRegions.left.length * COLUMN_WIDTH;
@@ -54,6 +134,7 @@ export function VirtualGrid() {
     viewport.width - pinnedLeftWidth - pinnedRightWidth,
   );
 
+  const windowCalculationStartedAt = performance.now();
   const renderWindow = calculateRenderWindow({
     viewport: {
       width: centerViewportWidth,
@@ -63,9 +144,10 @@ export function VirtualGrid() {
     },
     rowGeometry,
     columnGeometry,
-    rowBuffer: 400,
-    columnBuffer: 0,
+    rowBuffer,
+    columnBuffer,
   });
+  const windowCalculationMs = performance.now() - windowCalculationStartedAt;
 
   const logicalGridHeight = ROW_COUNT * ROW_HEIGHT;
   const centerContentWidth = columnRegions.center.length * COLUMN_WIDTH;
@@ -203,14 +285,26 @@ export function VirtualGrid() {
         data-testid="grid-scrollport"
         onScroll={(event) => {
           const scrollport = event.currentTarget;
-          setScrollPosition({
-            scrollLeft: scrollport.scrollLeft,
-            scrollTop: scrollport.scrollTop,
-          });
-          setViewport({
-            width: scrollport.clientWidth,
-            height: scrollport.clientHeight,
-          });
+          scrollEventId.current++;
+          const eventAt = performance.now();
+          const updateScrollState = () => {
+            setScrollPosition({
+              scrollLeft: scrollport.scrollLeft,
+              scrollTop: scrollport.scrollTop,
+              eventId: scrollEventId.current,
+              eventAt,
+            });
+            setViewport({
+              width: scrollport.clientWidth,
+              height: scrollport.clientHeight,
+            });
+          };
+
+          if (flushSyncEnabled) {
+            flushSync(updateScrollState);
+          } else {
+            updateScrollState();
+          }
         }}
         style={{
           width: '100%',
@@ -221,6 +315,33 @@ export function VirtualGrid() {
       >
         <div
           data-testid="grid-canvas"
+          data-flush-sync-enabled={flushSyncEnabled}
+          ref={scrollMetricsRef}
+          data-row-buffer={rowBuffer}
+          data-column-buffer={columnBuffer}
+          data-rendered-row-count={renderWindow.rowEnd - renderWindow.rowStart}
+          data-row-start={renderWindow.rowStart}
+          data-row-end={renderWindow.rowEnd}
+          data-rendered-center-column-count={
+            renderWindow.columnEnd - renderWindow.columnStart
+          }
+          data-column-start={renderWindow.columnStart}
+          data-column-end={renderWindow.columnEnd}
+          data-rendered-cell-count={
+            (renderWindow.rowEnd - renderWindow.rowStart) *
+            (columnRegions.left.length +
+              columnRegions.right.length +
+              renderWindow.columnEnd -
+              renderWindow.columnStart)
+          }
+          data-scroll-to-render-ms="0"
+          data-scroll-event-id="0"
+          data-last-scroll-event-at="0"
+          data-react-commit-at="0"
+          data-rendered-scroll-top="0"
+          data-rendered-scroll-left="0"
+          data-rendered-viewport-width={VIEWPORT_WIDTH}
+          data-rendered-viewport-height={VIEWPORT_HEIGHT}
           style={{
             position: 'relative',
             width: logicalGridWidth,
@@ -251,6 +372,8 @@ export function VirtualGrid() {
               rows: ROW_COUNT,
               columns: COLUMN_COUNT,
               centerColumns: columnRegions.center.length,
+              rowBuffer,
+              columnBuffer,
               renderWindow,
               centerViewportWidth,
               scrollPosition,

@@ -1,5 +1,16 @@
 {
   "name": "@org/playground",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "nx": {
+    "targets": {
+      "e2e": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "playwright test",
+          "cwd": "apps/playground"
+        }
+      }
+    }
+  }
 }

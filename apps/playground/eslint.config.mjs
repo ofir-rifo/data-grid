@@ -3,7 +3,7 @@ import nx from '@nx/eslint-plugin';
 import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  playwright.configs['flat/recommended'],
+  { ...playwright.configs['flat/recommended'], files: ['e2e/**/*.ts'] },
   ...nx.configs['flat/react'],
   ...baseConfig,
   {

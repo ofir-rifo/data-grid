@@ -7,6 +7,7 @@ out-tsc
 
 # dependencies
 node_modules
+.pnpm-store/
 
 # IDEs and editors
 /.idea
@@ -52,3 +53,7 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 test-output
 .codex-tools/
+
+# local temporary files and private notes
+_tmp_*
+/ofir.md
