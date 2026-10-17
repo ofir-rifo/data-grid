@@ -529,8 +529,24 @@ Published PR: https://github.com/ofir-rifo/data-grid/pull/1, feature branch
 `39068816589` failed during Node setup: implicit package-manager caching tried to
 invoke pnpm in the dependency-free job. Explicitly disabling that cache fixes the
 configuration without installing dependencies there. Initial main CI frozen install
-succeeded. Final hosted results must be checked on the current PR head; local checks
-do not establish runner success. CI's development-browser
+succeeded; that superseded CI run was cancelled by concurrency control.
+
+Hosted evidence at `89f9823` (Ubuntu 24.04 / Node 24.21.0):
+
+- [DataGrid checks, run 39068867300](https://github.com/ofir-rifo/data-grid/actions/runs/39068867300):
+  success. Frozen installation, full project-reference typecheck, ESLint (zero errors /
+  nine existing warnings), 6 unit files / 27 tests, Vite bundle (244ms), and all
+  6 bounded Chromium regressions (6.8s) passed. This is real hosted execution.
+- [Conventions, run 39068867331](https://github.com/ofir-rifo/data-grid/actions/runs/39068867331):
+  success. Three validator tests passed; log confirms the title and **all 2 PR commits**
+  were validated, excluding the synthetic merge.
+- Runner warns that pinned `pnpm/action-setup@v4` declares a Node 20 action runtime;
+  GitHub forced Node 24 and the action succeeded. Review an upstream runtime migration
+  separately; no runner/runtime setting is changed here.
+
+This evidence update is a subsequent documentation commit. Check current-head runs
+before merge; the links above establish results for `89f9823`, not unseen future tips.
+Local checks do not establish runner success. CI's development-browser
 regressions and bundle compilation are separate checks, not production-browser evidence.
 The POC is **not formally VALIDATED**; painted frames, scheduling cost, memory,
 scalability and the reviewed exit decision remain pending. BSODs remain unexplained.
