@@ -21,3 +21,12 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+## Persistent DataGrid development workflow
+
+- Read `docs/PROJECT-STATUS.md` before planning new development; follow the existing specifications and project principles it references.
+- Use this cycle: Read specs → Identify next approved task → Implement → Verify when authorized → Review → Update project status → Continue within approved scope.
+- Update project status after completing an approved milestone, preserving architectural decisions and recording important trade-offs.
+- Distinguish implemented work, tested results (including dates and scope), manual observations, hypotheses, and pending work. Do not present historical results as newly verified.
+- Ask for approval before major architecture changes or expanding scope. Recommended milestones are not authorization to implement them.
+- Observe the safety constraints in project status; verification requirements do not authorize prohibited workloads.
