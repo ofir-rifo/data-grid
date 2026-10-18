@@ -734,9 +734,15 @@ settings or suppressions changed. Nx printed a flaky-task notice after the sourc
 correction; no automatic retry/Nx Cloud was enabled or nondeterminism established.
 
 No local browser, performance/stress run, native input capture, memory sampling,
-dependency install/upgrade or CI-policy weakening occurred. Current-head hosted
-browser/CI results must be confirmed on [PR #3](https://github.com/ofir-rifo/data-grid/pull/3)
-after publication; prior PR #2's green CI is historical. No apparent instability
+dependency install/upgrade or CI-policy weakening occurred. Hosted validation of
+PR #3 implementation commit `67c2b2e` passed on 2026-10-18:
+[CI run 39155692956](https://github.com/ofir-rifo/data-grid/actions/runs/39155692956)
+passed typecheck, nine policy tests, standards (zero errors, nine existing warnings),
+40 unit tests in seven files, build, and all six bounded Chromium regressions (7.3s).
+[Conventions run 39155692957](https://github.com/ofir-rifo/data-grid/actions/runs/39155692957)
+passed PR-title and commit validation. This is ordinary correctness CI, not a
+production performance, memory or painted-frame measurement. Subsequent documentation
+commits require their own CI status check; prior PR #2's green CI is historical. No apparent instability
 occurred; prior BSOD cause remains undiagnosed.
 
 **Production GO / NO-GO: NO-GO pending evidence.** Formal POC outcome is still pending,
