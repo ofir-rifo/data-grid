@@ -30,3 +30,13 @@
 - Distinguish implemented work, tested results (including dates and scope), manual observations, hypotheses, and pending work. Do not present historical results as newly verified.
 - Ask for approval before major architecture changes or expanding scope. Recommended milestones are not authorization to implement them.
 - Observe the safety constraints in project status; verification requirements do not authorize prohibited workloads.
+
+## Engineering standards
+
+- Read `docs/ENGINEERING-STANDARDS.md` before changing code/configuration. Preserve Nx/project lint rules and the documented legacy exceptions.
+- New authored styles must be `*.module.scss`; do not add global CSS/SCSS, `!important`, or blanket lint suppressions. Keep required legacy framework styles until their reviewed migration.
+- Reject unused bindings/imports, empty implementations, unreachable code, debugger statements, explicit `any`, unsafe TS suppressions and unhandled Promises. Production library logging must use an injected diagnostic contract.
+- Only underscore-prefixed intentionally discarded parameters are exempt from unused checks; unused variables are not exempt. Explain negative type-test suppressions.
+- Run the bounded Nx `standards-test`, `standards` and `typecheck` targets when authorized. The standards inventory includes unimported files; keep it that way when adding packages.
+- Safe import autofixing is opt-in, explicit-file and type-only. Do not run broad autofixes or remove runtime imports/dead-code candidates without reviewing effects and approval scope.
+- Knip is advisory; investigate findings before cleanup. Never disable useful rules merely to pass CI. Record existing debt, exact exceptions and verification limits in project status.

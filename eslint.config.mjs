@@ -1,4 +1,8 @@
 import nx from '@nx/eslint-plugin';
+import {
+  engineeringConfig,
+  typedConfig,
+} from './tools/engineering/eslint-policy.mjs';
 
 export default [
   ...nx.configs['flat/base'],
@@ -31,18 +35,18 @@ export default [
       ],
     },
   },
+  ...engineeringConfig.map((config) => ({
+    ...config,
+    basePath: import.meta.dirname,
+  })),
   {
-    files: [
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.cjs',
-      '**/*.mjs',
-    ],
-    // Override or add rules here
-    rules: {},
+    ...typedConfig,
+    basePath: import.meta.dirname,
+    languageOptions: {
+      parserOptions: {
+        ...typedConfig.languageOptions.parserOptions,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
 ];

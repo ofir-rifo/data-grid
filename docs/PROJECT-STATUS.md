@@ -11,7 +11,7 @@ Current phase: playground POC-V1 for fixed-geometry 2D virtualization and fast-s
 ## Repository checkpoint
 
 - Repository: `C:\Users\ofirr\dev\table\data-grid`.
-- Branch: `main`.
+- Branch at CI preparation: `ci/datagrid-foundation`, based on `origin/main` at `3cc5b917f4fc55677cc877145ccb31630aec8ebc`. Recheck Git for the current tip.
 - Checkpoint base: `524290a4574321c00c84617e504e21cfe9901e74` — `feat(playground): add scroll diagnostics and opt-in flushSync experiment`. The authorized checkpoint below records subsequent containment/regression/documentation work; use current Git history for the final checkpoint tip.
 - Containment implementation checkpoint: `0820ed7cfd65dca590a59a150275c264403eeaec` — `fix(playground): contain virtualized cell overflow`.
 - Regression/diagnostic checkpoint: `0133ac172d5b6c6c36bb14f93a0c9725e55d0ce3` — `test(playground): add flushSync regressions and scroll diagnostics`.
@@ -492,6 +492,126 @@ This document is committed in group C; the separately committed foundation propo
 ## Single next recommendation — awaiting scope/execution approval
 
 Next recommended milestone: review the verified POC containment change, then separately authorize a bounded native-scroll evidence plan/run to resolve the fast-scroll/paint question and scheduling trade-off. Do not repeat passing geometry regressions without a new reason or enable flushSync by default. Production implementation still requires the documented POC exit decision and approval of the proposed foundation contract.
+
+## CI foundation — 2026-10-17
+
+Authorized scope: feature-branch CI/configuration/documentation, bounded relevant
+validation, branch push and PR creation. This supersedes the earlier blanket
+execution/commit restriction only for this milestone. No application behavior,
+default-off flushSync, POC decision or production implementation is changed.
+
+Prepared on `ci/datagrid-foundation` from `3cc5b91` (`origin/main`). See [CI contract](CI.md)
+for exact checks, conventions and proposed squash policy. PR CI replaces the old
+npm/Nx Cloud distributed template with pinned pnpm, frozen installation, sequential
+Nx checks, one hosted Vite build and six bounded Chromium regressions. Separate
+read-only conventions workflow checks PR titles and every commit in the actual
+base/head range, including multi-commit PRs and excluding synthetic merge commits.
+Conventions title edits do not repeat browser work. No branch rules/settings changed.
+
+Local validation (Windows, Node v26.5.0, pnpm 12.5.1; daemon/cloud/cache disabled,
+one Nx task at a time, 2 GB Node old-space):
+
+- `node --test .github/scripts/check-conventions.test.mjs`: 3 passed. Initial sandbox
+  run could not write temporary Git metadata; rerun outside sandbox passed.
+- `pnpm nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1`:
+  passed, declaration-only TypeScript project-reference checks.
+- `pnpm nx run @org/playground:lint --excludeTaskDependencies --skipSync --parallel=1`:
+  passed, zero errors / nine existing conditional-in-test warnings in diagnostic files.
+- `pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"`:
+  6 files / 27 tests passed (3.62s Vitest duration).
+- Both workflow YAML files parsed; PR events/read-only permissions checked.
+  Lockfile's existing application document is byte-equivalent after newline normalization;
+  pnpm added only its pinned bootstrap document. No application dependency installation
+  or local browser/build/benchmark was performed in this milestone.
+
+Published PR: https://github.com/ofir-rifo/data-grid/pull/1, feature branch
+`ci/datagrid-foundation`; main is unchanged. Initial hosted conventions run
+`39068816589` failed during Node setup: implicit package-manager caching tried to
+invoke pnpm in the dependency-free job. Explicitly disabling that cache fixes the
+configuration without installing dependencies there. Initial main CI frozen install
+succeeded; that superseded CI run was cancelled by concurrency control.
+
+Hosted evidence at `89f9823` (Ubuntu 24.04 / Node 24.21.0):
+
+- [DataGrid checks, run 39068867300](https://github.com/ofir-rifo/data-grid/actions/runs/39068867300):
+  success. Frozen installation, full project-reference typecheck, ESLint (zero errors /
+  nine existing warnings), 6 unit files / 27 tests, Vite bundle (244ms), and all
+  6 bounded Chromium regressions (6.8s) passed. This is real hosted execution.
+- [Conventions, run 39068867331](https://github.com/ofir-rifo/data-grid/actions/runs/39068867331):
+  success. Three validator tests passed; log confirms the title and **all 2 PR commits**
+  were validated, excluding the synthetic merge.
+- Runner warns that pinned `pnpm/action-setup@v4` declares a Node 20 action runtime;
+  GitHub forced Node 24 and the action succeeded. Review an upstream runtime migration
+  separately; no runner/runtime setting is changed here.
+
+This evidence update is a subsequent documentation commit. Check current-head runs
+before merge; the links above establish results for `89f9823`, not unseen future tips.
+Local checks do not establish runner success. CI's development-browser
+regressions and bundle compilation are separate checks, not production-browser evidence.
+The POC is **not formally VALIDATED**; painted frames, scheduling cost, memory,
+scalability and the reviewed exit decision remain pending. BSODs remain unexplained.
+
+Next recommendation: review real hosted CI outcomes, then separately approve main
+branch rules/merge settings and advisory AI review permissions. No settings approval
+or further POC workload is implied by this CI implementation.
+
+## Engineering standards follow-up — 2026-10-18
+
+Authorized on the same open PR #1 / `ci/datagrid-foundation`, from `79dbc63`;
+do not merge or change protection settings. Scope includes the four pinned policy
+tools, configuration, isolated policy tests, documentation, bounded checks and
+feature-branch publication. Application implementation, default-off flushSync and
+the **not formally VALIDATED** POC status are unchanged.
+
+See [Engineering standards](ENGINEERING-STANDARDS.md) for enforced rules, safe
+type-only import fixing, precise legacy styling/underscore-parameter exceptions,
+report-only Knip limitations and staged cleanup proposals. The root inventory checks
+unimported tracked/non-ignored files and uses nearest ESLint configs to preserve
+React/Playwright rules. CI replaces its duplicate app lint step with this inventory,
+adds nine policy tests and an advisory, timeout-bounded Knip step. Existing
+unit/build/six-case Chromium checks and multi-commit conventions validation remain.
+
+Bounded local results (Windows / Node 26.5.0 / pnpm 12.5.1, daemon/cloud/cache off,
+2 GB per-process Node old-space, serial Nx tasks, common flags
+`--excludeTaskDependencies --skipSync --parallel=1`):
+
+- `pnpm nx run @org/playground:standards-test`: **9 passed**, latest duration 2.35s.
+  Initial Promise-misuse fixture used DOM TimerHandler, which does not promise a
+  void callback; corrected the fixture to an explicit void-callback contract and
+  separately checked valid rejection handling. No application issue or assertion
+  weakening was involved. Comment-only empty bodies also fail; parameter-property
+  constructors retain their real initialization semantics.
+- `pnpm nx run @org/playground:standards`: **passed**, 37 source / 2 style files,
+  zero errors and nine existing Playwright conditional warnings. Initial unused
+  audit flagged five intentional positional/interface `_` parameters; documented
+  the conventional parameter-only exception, with negative tests for unused locals
+  and used underscore parameters. No source code was changed to silence checks.
+- `pnpm nx run @org/playground:typecheck`: **passed** with unused-parameter and
+  unreachable-code checking added.
+- `pnpm nx run @org/playground:test --args="--run --maxWorkers=1 --no-file-parallelism"`:
+  **6 files / 27 tests passed**, 3.44s. No local browser/build/performance run.
+- `pnpm nx run @org/playground:dead-code-report`: completed report-only, exit 0;
+  five unused-file candidates plus dependency/export/type findings and configuration
+  hints. Includes known modeling limitations; not proof that the HTML-linked global
+  stylesheet or Nx tooling dependencies can be removed. No cleanup performed.
+- `pnpm peers check`: passed after a targeted, in-range update of two CSS tooling
+  transitive peers. No broad dependency upgrade. Required pinned tools installed;
+  existing ESLint 9 deprecation and old `whatwg-encoding` warning remain upgrade debt.
+
+Read-only GitHub verification: PR open on the expected branch, public personal repo;
+rulesets and effective main rules empty, classic protection GET 404, merge/squash/rebase
+all enabled. Existing required-check candidates are `DataGrid checks` and
+`Conventional commits`, both GitHub Actions integration 15368. Exact recommended
+main/squash settings are documented; no protection/settings mutation performed.
+
+This is the pre-publication evidence record for the follow-up commit. Actual
+current-head hosted results must be confirmed on PR #1 after push and reported
+separately; earlier green runs do not establish this commit's results. No instability
+was apparent during bounded commands; the prior BSOD cause remains undiagnosed.
+
+Next recommendation: review this policy PR and its actual current-head checks, then
+separately approve protection/squash settings. Legacy-style/Knip cleanup and POC exit
+work require their own scope; no further implementation is approved here.
 
 ## Resume and continue
 

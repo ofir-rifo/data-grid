@@ -13,6 +13,8 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
