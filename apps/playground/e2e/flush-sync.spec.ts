@@ -9,7 +9,11 @@ const modes = [
 
 async function checkJump(
   page: Page,
-  position: { top: number; left: number },
+  position: {
+    top: number;
+    left: number;
+    via?: { top: number; left: number }[];
+  },
   enabled: string,
 ) {
   const scrollport = page.getByTestId('grid-scrollport');
@@ -22,6 +26,10 @@ async function checkJump(
     // can change scrollable overflow, so a later maximum is a different oracle.
     const maxTop = element.scrollHeight - element.clientHeight;
     const maxLeft = element.scrollWidth - element.clientWidth;
+    for (const intermediate of target.via ?? []) {
+      element.scrollTop = intermediate.top;
+      element.scrollLeft = intermediate.left;
+    }
     element.scrollTop = target.top;
     element.scrollLeft = target.left;
     return {
@@ -31,8 +39,12 @@ async function checkJump(
       maxLeft,
     };
   }, position);
-  expect(appliedPosition.top).toBe(Math.min(position.top, appliedPosition.maxTop));
-  expect(appliedPosition.left).toBe(Math.min(position.left, appliedPosition.maxLeft));
+  expect(appliedPosition.top).toBe(
+    Math.min(Math.max(0, position.top), appliedPosition.maxTop),
+  );
+  expect(appliedPosition.left).toBe(
+    Math.min(Math.max(0, position.left), appliedPosition.maxLeft),
+  );
 
   // Wait for committed state, not an arbitrary delay or a timing threshold.
   await expect
@@ -84,11 +96,13 @@ async function checkJump(
       const cell = grid.querySelector<HTMLElement>(
         `[data-row="${visibleRow}"][data-column="column-${column}"]`,
       );
-      if (!cell) throw new Error(`Missing visible cell ${visibleRow}:${column}`);
+      if (!cell)
+        throw new Error(`Missing visible cell ${visibleRow}:${column}`);
       const rect = cell.getBoundingClientRect();
       return { x: rect.x, y: rect.y, height: rect.height };
     };
-    const viewportLeft = element.getBoundingClientRect().left + element.clientLeft;
+    const viewportLeft =
+      element.getBoundingClientRect().left + element.clientLeft;
     return {
       data: { ...grid.dataset },
       scrollTop,
@@ -100,6 +114,7 @@ async function checkJump(
       columnStart,
       columnEnd,
       rowCount: grid.querySelectorAll('[data-testid="grid-row"]').length,
+      elementDescendants: grid.querySelectorAll('*').length,
       actualCells,
       expectedCells: expectedCells.sort(),
       pins: [0, 1, 998, 999].map(cellRect),
@@ -118,6 +133,12 @@ async function checkJump(
   expect(sample.actualCells).toEqual(sample.expectedCells);
   expect(sample.actualCells.length).toBeLessThanOrEqual(360);
   expect(sample.rowCount).toBe(sample.rowEnd - sample.rowStart);
+  // One row + one center wrapper + its cells, at this settled checkpoint.
+  // This is an element-count assertion, not a peak DOM or memory measurement.
+  expect(sample.elementDescendants).toBe(
+    sample.rowCount * (2 + 4 + sample.columnEnd - sample.columnStart),
+  );
+  expect(sample.elementDescendants).toBeLessThanOrEqual(432);
   expect(sample.data).toMatchObject({
     flushSyncEnabled: enabled,
     rowBuffer: '400',
@@ -176,9 +197,15 @@ test.describe('flushSync POC regression', () => {
     }) => {
       await page.goto(mode.url);
       const canvas = page.getByTestId('grid-canvas');
-      await expect(canvas).toHaveAttribute('data-flush-sync-enabled', mode.enabled);
+      await expect(canvas).toHaveAttribute(
+        'data-flush-sync-enabled',
+        mode.enabled,
+      );
       await page.reload();
-      await expect(canvas).toHaveAttribute('data-flush-sync-enabled', mode.enabled);
+      await expect(canvas).toHaveAttribute(
+        'data-flush-sync-enabled',
+        mode.enabled,
+      );
       await expect(page.getByTestId('grid-scrollport')).toHaveCount(1);
 
       for (const position of [
@@ -188,10 +215,24 @@ test.describe('flushSync POC regression', () => {
         { top: 400_000, left: 12_000 }, // Horizontal large jump.
         { top: 2_000_000, left: 60_000 }, // Both axes.
         { top: 4_000_000, left: 120_000 }, // Native bottom/right clamping.
-        { top: 0, left: 0 }, // Reverse to origin.
+        { top: -400, left: -1_200 }, // Reverse beyond origin: native clamping to zero.
       ]) {
         await checkJump(page, position, mode.enabled);
       }
+      // Multiple writes in one browser task; assert only the final settled state,
+      // not a one-event-per-write assumption or a displayed-frame guarantee.
+      await checkJump(
+        page,
+        {
+          top: 80,
+          left: 240,
+          via: [
+            { top: 400_000, left: 12_000 },
+            { top: 2_000_000, left: 60_000 },
+          ],
+        },
+        mode.enabled,
+      );
       // Final-state correctness does not prove absence of transient painted blanks.
     });
   }

@@ -1,6 +1,6 @@
 # DataGrid project status
 
-Last reviewed: 2026-10-17. This handoff records the authorized four-phase preparation; future proposals are not authorization for new work.
+Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase
 
@@ -11,7 +11,7 @@ Current phase: playground POC-V1 for fixed-geometry 2D virtualization and fast-s
 ## Repository checkpoint
 
 - Repository: `C:\Users\ofirr\dev\table\data-grid`.
-- Current maintenance branch: `chore/developer-experience-dependencies`, based on PR #1 squash merge `ee84747` on `origin/main`. Recheck Git for the current tip.
+- Current validation branch: `test/virtualization-poc-validation`, based on PR #2 squash merge `f04bafa` on `origin/main`. Recheck Git for the current tip.
 - Checkpoint base: `524290a4574321c00c84617e504e21cfe9901e74` — `feat(playground): add scroll diagnostics and opt-in flushSync experiment`. The authorized checkpoint below records subsequent containment/regression/documentation work; use current Git history for the final checkpoint tip.
 - Containment implementation checkpoint: `0820ed7cfd65dca590a59a150275c264403eeaec` — `fix(playground): contain virtualized cell overflow`.
 - Regression/diagnostic checkpoint: `0133ac172d5b6c6c36bb14f93a0c9725e55d0ce3` — `test(playground): add flushSync regressions and scroll diagnostics`.
@@ -37,7 +37,7 @@ Current phase: playground POC-V1 for fixed-geometry 2D virtualization and fast-s
 - **Historical test results, not newly verified:** the investigation document reports 27 unit tests, typecheck, lint with four warnings, and 13 Chromium production tests passing. It says Firefox/WebKit were not run. These results predate the flushSync experiment and do not validate its current behavior.
 - **Manual observation, 2026-10-17:** the user reported correct scrolling with `flushSync=1` and recurrence of the problem after disabling it. This is not a benchmark or cross-browser guarantee.
 - **Workflow support implemented:** `.gitignore` excludes `_tmp_*`, `/ofir.md`, and `.pnpm-store/`; `Remove-TempFiles.ps1` supports preview with `-WhatIf`. The deleted Tunnel/MCP bridge is not a development prerequisite and must not be restored without approval.
-- **Current verification:** the containment milestone passed targeted app/e2e no-emit typechecks, targeted lint (0 errors, 6 diagnostic warnings), two default/enabled containment cases, and all four flag/scroll regressions. Cell `overflow: clip` now prevents the measured 4px extension; the grid remains exactly 4,000,000px high and 120,000px wide in captured default/enabled layouts. Production foundation remains proposed; no builds, recordings, benchmarks, or performance measurements ran. Formal POC validation remains pending.
+- **Containment milestone verification (historical):** targeted app/e2e no-emit typechecks, targeted lint (0 errors, 6 diagnostic warnings), two default/enabled containment cases, and all four flag/scroll regressions passed. Cell `overflow: clip` prevents the measured 4px extension; captured default/enabled layouts remained exactly 4,000,000px high and 120,000px wide. No builds, recordings, benchmarks or performance measurements ran in that milestone. Subsequent PR correctness/build results are recorded below; formal POC validation remains pending.
 
 ## Current virtualization architecture
 
@@ -475,9 +475,9 @@ Acceptance criteria:
 
 ## Safety and authorization constraints
 
-The user reports recent memory-related BSODs; their cause has not been diagnosed here. Avoid heavy tests, benchmarks, parallel workloads, large-data runs, and browser trace capture until explicitly authorized with bounded scope. Current instructions prohibit all tests, builds, benchmarks, browser automation, performance traces, dependency installs/updates, system/hardware configuration changes, commits/pushes, reset/clean/discard operations, and Tunnel/bridge restoration. Keep flushSync off by default. A proposed task or general definition of done does not lift these restrictions.
+The user reports recent memory-related BSODs; their cause has not been diagnosed here. Avoid heavy tests, benchmarks, parallel workloads, large-data runs and browser trace capture until explicitly authorized with bounded scope. PR #3 permits bounded local correctness/static/build checks, existing hosted correctness CI, and feature-branch commit/push/PR delivery only. Local browser stress, new heavy measurement, dependency upgrades, production implementation, system/hardware changes, destructive Git operations and Tunnel/bridge restoration remain outside scope. Keep flushSync off by default. Proposals and a general definition of done grant no additional workload permission.
 
-Exceptions completed: previous controlled checks/batches, final-row layout diagnostic, and the authorized POC containment correction/static checks/two-invocation verification are finished. Foundation specification preparation is complete; it does not authorize production implementation. No exception authorizes additional execution.
+Earlier controlled checks/batches, final-row diagnostic and containment verification are completed historical authorizations, not ongoing permission. Foundation specification preparation does not authorize production implementation. The current PR #3 scope/evidence below supersedes earlier blanket execution prohibitions only for its explicitly approved bounded work.
 
 ## Authorized Git checkpoint — 2026-10-17
 
@@ -677,6 +677,87 @@ BSODs remain undiagnosed; no instability was apparent during these bounded comma
 This is a pre-publication record; final-head GitHub Actions results must be checked
 separately after push. Next step: tech-lead review of PR #2 and its actual CI results.
 Do not merge; any deferred migration or additional POC work needs separate approval.
+
+## PR #3 — POC evidence audit and deterministic regressions — 2026-10-18
+
+PR #2 squash merge `f04bafa` was fetched/verified. Clean local `main` was safely
+fast-forwarded; created `test/virtualization-poc-validation`. Authorized: focused
+audit, necessary deterministic tests/minimal fixes, bounded local checks, existing
+hosted correctness CI and feature-branch PR delivery. No dependency upgrade,
+production foundation, broad refactor, heavy measurement/workflow dispatch or merge.
+
+Current source of truth: [POC validation audit](POC-VALIDATION.md), which maps POC
+§§13–15/19–20 to scoped evidence/gaps and measurable default-geometry DOM bounds.
+[Measurement plan](PERFORMANCE-MEASUREMENT.md) adds explicitly **proposed** latency,
+memory and visual gates plus an approval-required hosted envelope. No new POC
+performance measurements or heavy infrastructure were produced. Roadmap, architecture and scroll
+investigation now point to this current ledger while retaining historical results.
+
+Implemented:
+
+- A four-line zero-count guard in `engine/calculate-render-window.ts`. Three new
+  tests reproduced phantom `[0,1)` ranges for empty row/column geometry; the fix
+  returns an empty range and leaves nonempty formulas unchanged.
+- Eleven new calculation cases: empty axes, exclusive/fractional boundaries,
+  independent buffers, final edges, larger-than-dataset viewports and three
+  constant-space logical-count comparisons. The latter do not allocate large
+  arrays/DOM or establish empirical million-row browser scalability.
+- Two jsdom/StrictMode component regressions for latest consecutive two-axis scroll
+  state, exact cells/ranges/counts, in-window logical key reuse, mount-time flag,
+  unmount/detached-event behavior and fresh remount state. Mocked client dimensions
+  are not browser-layout, native-scroll, paint, memory or leak-free evidence.
+- Existing six-case Chromium CI coverage strengthened without expanding the matrix:
+  native negative clamping, same-task write bursts/final pinned coverage, exact
+  settled canvas element-descendant counts (≤432), and both-axis/three-region
+  containment assertions. Cell cap remains 360 under default viewport/buffers.
+
+Bounded local results (Windows, Node 26.5.0, pnpm 12.5.1; one command/worker at a
+time, daemon/cloud/cache off, plugin isolation off, Node old-space 2048MiB):
+
+| Command | Actual result |
+| --- | --- |
+| `pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run src/app/virtualization/engine/calculate-render-window.spec.ts --maxWorkers=1 --no-file-parallelism"` | Initial red run: three true empty-axis failures plus one new-fixture error; confirmed defect before fix |
+| `pnpm run test:playground` | Final **7 files / 40 passed**, 4.52s Vitest duration |
+| `pnpm run typecheck` | Passed after adding a DOM-lib reference only to the new browser-environment unit file |
+| `pnpm run lint` | Passed, 38 source / 2 style files, zero errors / nine unchanged Playwright diagnostic warnings |
+| `pnpm run build:playground` | Passed, 20 modules / 134ms Vite build duration; outputs ignored |
+| `pnpm nx run @org/playground:standards-test --excludeTaskDependencies --skipSync --parallel=1` | **9 passed**, 2.21s test duration |
+
+Test-development corrections: the buffer fixture originally expected an unclamped
+end beyond its ten rows; moved it to an interior offset to test independent buffers
+without that unrelated edge. The initial enabled-mode test wrongly required DOM-node
+reuse across an intermediate jump that unmounts the row; key-reuse assertions now
+follow an adjacent move where the row actually remains mounted, with the same identity
+assertion retained. This follows architecture §5, not a renderer workaround. Typecheck
+correctly rejected missing DOM declarations in the new jsdom test; no shared compiler
+settings or suppressions changed. Nx printed a flaky-task notice after the source
+correction; no automatic retry/Nx Cloud was enabled or nondeterminism established.
+
+No local browser, performance/stress run, native input capture, memory sampling,
+dependency install/upgrade or CI-policy weakening occurred. Hosted validation of
+PR #3 implementation commit `67c2b2e` passed on 2026-10-18:
+[CI run 39155692956](https://github.com/ofir-rifo/data-grid/actions/runs/39155692956)
+passed typecheck, nine policy tests, standards (zero errors, nine existing warnings),
+40 unit tests in seven files, build, and all six bounded Chromium regressions (7.3s).
+[Conventions run 39155692957](https://github.com/ofir-rifo/data-grid/actions/runs/39155692957)
+passed PR-title and commit validation. This is ordinary correctness CI, not a
+production performance, memory or painted-frame measurement. Subsequent documentation
+commits require their own CI status check; prior PR #2's green CI is historical. No apparent instability
+occurred; prior BSOD cause remains undiagnosed.
+
+**Production GO / NO-GO: NO-GO pending evidence.** Formal POC outcome is still pending,
+not `VALIDATED` and not an unsupported `ARCHITECTURE CHANGE REQUIRED` verdict. Default
+flushSync remains off. Missing: current production timing/initial render/React cost,
+presented/native frame evidence, memory/peak DOM/retention, empirical logical-size
+scaling, supported-browser decision and a reviewed §19 scheduling/exit record.
+The million-row 40,000,000px height vs §17 non-goal needs explicit handling. Candidate
+budgets are new proposals, not retroactively approved thresholds or achieved results.
+
+Next: Tech Lead reviews the ordinary CI and approves/adjusts reference environment,
+budgets and supervised hosted timing first, then separate native-display and memory/
+scaling stages. No benchmark workflow is provisioned/dispatched now. Only after all
+required gates have supporting evidence and a reviewed exit decision may GRID-V1's
+proposed foundation be approved. Do not merge PR #3 or start production code here.
 
 ## Resume and continue
 

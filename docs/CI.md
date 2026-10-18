@@ -30,7 +30,7 @@ commands as local development. Their underlying Nx commands/flags are preserved.
    exceptions, safe import fixing and the unimported-file checks.
    `dead-code-report` runs Knip advisory-only with a two-minute timeout; findings
    and tool failures are visible but non-blocking during evaluation.
-3. `test`: the six existing Vitest files (27 tests at this checkpoint), one worker,
+3. `test`: seven Vitest files (40 tests at the PR #3 checkpoint), one worker,
    no file parallelism, no watch mode.
 4. `build`: one Vite bundle verification on the hosted runner, catching bundling
    failures that typechecking does not detect. No publishing or deployment.
