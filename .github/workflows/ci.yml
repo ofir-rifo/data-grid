@@ -36,21 +36,21 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck application, unit tests and browser tests
-        run: pnpm nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1
+        run: pnpm run typecheck
       - name: Engineering policy tests
         timeout-minutes: 2
         run: pnpm nx run @org/playground:standards-test --excludeTaskDependencies --skipSync --parallel=1
       - name: Engineering standards (ESLint, Stylelint, file policy)
         timeout-minutes: 2
-        run: pnpm nx run @org/playground:standards --excludeTaskDependencies --skipSync --parallel=1
+        run: pnpm run lint
       - name: Dead-code report (advisory)
         timeout-minutes: 2
         continue-on-error: true
         run: pnpm nx run @org/playground:dead-code-report --excludeTaskDependencies --skipSync --parallel=1
       - name: Unit tests
-        run: pnpm nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"
+        run: pnpm run test:playground
       - name: Verify Vite bundle
-        run: pnpm nx run @org/playground:build --excludeTaskDependencies --skipSync --parallel=1
+        run: pnpm run build:playground
       - name: Install Chromium on runner
         run: pnpm exec playwright install --with-deps chromium
       - name: Bounded Chromium regressions

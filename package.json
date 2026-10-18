@@ -2,7 +2,14 @@
   "name": "@org/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "nx run @org/playground:dev --skipSync",
+    "dev:open": "nx run @org/playground:dev --skipSync --args=\"--open\"",
+    "build:playground": "nx run @org/playground:build --excludeTaskDependencies --skipSync --parallel=1",
+    "test:playground": "nx run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args=\"--run --maxWorkers=1 --no-file-parallelism\"",
+    "typecheck": "nx run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1",
+    "lint": "nx run @org/playground:standards --excludeTaskDependencies --skipSync --parallel=1"
+  },
   "private": true,
   "packageManager": "pnpm@12.5.1",
   "devDependencies": {
@@ -21,8 +28,8 @@
     "@swc/cli": "~0.8.1",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
-    "@testing-library/dom": "10.4.0",
-    "@testing-library/react": "16.3.0",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
