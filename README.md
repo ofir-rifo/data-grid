@@ -1,4 +1,37 @@
-# New Nx Repository
+# DataGrid
+
+## Playground commands
+
+Use Node 24 (the CI baseline) and the pinned pnpm 12.5.1. Install dependencies
+with `pnpm install --frozen-lockfile`, then run commands from the repository root:
+
+| Command                     | Purpose                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm run dev`              | Start the existing Nx/Vite playground at http://localhost:4200/.                             |
+| `pnpm run dev:open`         | Start the playground and open its URL in your default browser.                               |
+| `pnpm run build:playground` | Build the playground bundle.                                                                 |
+| `pnpm run test:playground`  | Run playground unit tests once, with one worker.                                             |
+| `pnpm run typecheck`        | Verify application, unit-test and browser-test TypeScript projects.                          |
+| `pnpm run lint`             | Run repository engineering standards, ESLint, SCSS Stylelint and stylesheet filename checks. |
+
+These scripts wrap existing Nx targets; `lint` deliberately runs the full standards
+inventory. Tests do not enter watch mode. Build/typecheck skip implicit dependencies
+and sync generators to avoid surprise work or source edits. Stop dev servers with
+Ctrl+C. Browser flags can be affected by Vite's `BROWSER`/`BROWSER_ARGS` environment.
+
+For bounded local verification in PowerShell, set `NX_DAEMON=false`,
+`NX_NO_CLOUD=true`, `NX_SKIP_REMOTE_CACHE=true`, `NX_SKIP_NX_CACHE=true`,
+`NX_ISOLATE_PLUGINS=false` and `NODE_OPTIONS=--max-old-space-size=2048` in the
+environment before running one command at a time. These are environment variables,
+not shell arguments; the heap cap is per Node process. Previous BSODs remain
+undiagnosed; avoid stress/performance workloads without explicit authorization.
+
+Read [project status](docs/PROJECT-STATUS.md),
+[engineering standards](docs/ENGINEERING-STANDARDS.md), and the dated
+[dependency audit](docs/DEPENDENCY-AUDIT.md) before expanding development scope.
+The virtualization POC is **not formally validated**; flushSync remains opt-in.
+
+## Original Nx workspace reference
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 

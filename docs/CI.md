@@ -17,6 +17,10 @@ Node old-space limited to 2 GB per process (not a total-machine memory cap).
 
 The workflow runs the existing `@org/playground` Nx targets:
 
+The finite typecheck, standards, unit-test and build steps call the root pnpm
+scripts documented in [README](../README.md), so CI exercises the same convenience
+commands as local development. Their underlying Nx commands/flags are preserved.
+
 1. `typecheck`: TypeScript build mode, declaration-only; covers app, unit-test and
    Playwright project references. This is not a Vite application build.
 2. `standards-test` and `standards`: positive/negative engineering policy tests,

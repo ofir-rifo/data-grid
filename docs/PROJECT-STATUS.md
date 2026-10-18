@@ -11,7 +11,7 @@ Current phase: playground POC-V1 for fixed-geometry 2D virtualization and fast-s
 ## Repository checkpoint
 
 - Repository: `C:\Users\ofirr\dev\table\data-grid`.
-- Branch at CI preparation: `ci/datagrid-foundation`, based on `origin/main` at `3cc5b917f4fc55677cc877145ccb31630aec8ebc`. Recheck Git for the current tip.
+- Current maintenance branch: `chore/developer-experience-dependencies`, based on PR #1 squash merge `ee84747` on `origin/main`. Recheck Git for the current tip.
 - Checkpoint base: `524290a4574321c00c84617e504e21cfe9901e74` — `feat(playground): add scroll diagnostics and opt-in flushSync experiment`. The authorized checkpoint below records subsequent containment/regression/documentation work; use current Git history for the final checkpoint tip.
 - Containment implementation checkpoint: `0820ed7cfd65dca590a59a150275c264403eeaec` — `fix(playground): contain virtualized cell overflow`.
 - Regression/diagnostic checkpoint: `0133ac172d5b6c6c36bb14f93a0c9725e55d0ce3` — `test(playground): add flushSync regressions and scroll diagnostics`.
@@ -612,6 +612,71 @@ was apparent during bounded commands; the prior BSOD cause remains undiagnosed.
 Next recommendation: review this policy PR and its actual current-head checks, then
 separately approve protection/squash settings. Legacy-style/Knip cleanup and POC exit
 work require their own scope; no further implementation is approved here.
+
+## PR #2 — developer experience and dependency maintenance — 2026-10-18
+
+PR #1 was squash-merged at `ee84747`. Verified the local working tree clean, fetched
+`origin/main`, switched local `main` and fast-forwarded only (no reset/rebase), then
+created `chore/developer-experience-dependencies`. This authorized maintenance slice
+adds root script conveniences and a scoped dependency audit/update; it does not
+authorize production implementation, POC validation, settings changes or PR merge.
+
+Root `package.json` previously had no scripts. Added six wrappers around existing
+resolved Nx targets: `dev`, `dev:open`, `build:playground`, `test:playground`,
+`typecheck`, `lint`. No new tooling/project/duplicate implementation was introduced;
+Nx still reports only `@org/playground`. Lint runs the full standards inventory,
+unit tests run once with one worker, finite tasks are serial and skip implicit
+task dependencies/sync generation. Dev servers use the existing Nx/Vite config.
+README documents commands, environment limits and the pinned Node/pnpm baseline.
+
+[Dependency audit](DEPENDENCY-AUDIT.md) records installed/latest stable versions and
+action/risk for all 46 direct packages plus pnpm. Inspected both workspace manifests,
+the installed dependency tree (995 unique package/version pairs; 12,707 traversed
+edges), the two-document v9 lockfile, and peer/engine compatibility. This is a dated
+version/compatibility audit, not a security-advisory scan or transitive latest-version
+comparison of every package. Kept pnpm 12.5.1 and all runtime/toolchain resolutions.
+
+Applied only exact test-library patches: `@testing-library/dom` 10.4.0 → 10.4.2 and
+`@testing-library/react` 16.3.0 → 16.3.3. Published patches fix test dependency/type
+compatibility, React 19 option inference and act() re-entry; existing React/DOM/types
+peers fit. Lock changes are confined to those packages/references and DOM's
+chalk-to-picocolors edge. No blanket update, lint-rule weakening or Knip cleanup.
+
+Deferred: coordinated ten-package Nx 23.3 minor; ESLint 10 and associated plugin/
+configuration migration; TypeScript 7 (parser/SWC peers do not permit it); matched
+Vitest 5/UI/coverage and jsdom 30; React/DOM patch pair, browser revisions and other
+separately reviewable compiler/bundler/formatter/policy-tool updates. ESLint 9
+deprecation and old transitive whatwg-encoding remain known maintenance debt.
+
+Bounded local evidence (Windows / Node 26.5.0 / pnpm 12.5.1; daemon/cloud/cache off,
+plugin isolation off, 2 GB Node old-space, commands sequential):
+
+- `pnpm run typecheck`: passed, TypeScript project-reference verification (1.2s).
+- `pnpm run lint`: passed, 37 source/2 style files; zero errors and nine unchanged
+  Playwright diagnostic conditional warnings (4.7s).
+- `pnpm run test:playground`: 6 files / **27 passed**, 3.38s Vitest duration.
+- `pnpm run build:playground`: passed, 20 modules, 211ms Vite build duration; generated
+  bundle/typecheck outputs remain ignored. No production browser behavior claimed.
+- `pnpm run dev` and `pnpm run dev:open`: separately started server, got HTTP 200
+  for playground HTML and transformed `src/main.tsx`, stopped only owned process
+  trees. Each had an 18-second startup limit. Plain dev did not invoke open;
+  dev:open's real Vite `--open` callback received `http://localhost:4200/`. A temporary
+  BROWSER recorder intercepted opening, so no actual browser/stress run occurred;
+  OS/default-browser association was not visually verified.
+- `pnpm nx run @org/playground:standards-test --excludeTaskDependencies --skipSync --parallel=1`:
+  **9 passed**, 2.17s test duration.
+- `pnpm peers check`: no peer dependency issues. Registry and graph scratch records
+  stay under ignored `tmp/`; no temporary files/credentials are intended for Git.
+
+CI's four corresponding finite steps call the same root wrappers now; static
+expansion confirms their Nx commands/flags exactly match the previous workflow.
+Policy/conventions/browser steps and all CI safety/permission settings are preserved.
+Application source, engineering policies, default-off flushSync,
+and regression cases are unchanged. The POC is **not formally VALIDATED**. Previous
+BSODs remain undiagnosed; no instability was apparent during these bounded commands.
+This is a pre-publication record; final-head GitHub Actions results must be checked
+separately after push. Next step: tech-lead review of PR #2 and its actual CI results.
+Do not merge; any deferred migration or additional POC work needs separate approval.
 
 ## Resume and continue
 
