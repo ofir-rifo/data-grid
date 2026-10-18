@@ -21,6 +21,10 @@ function getVisibleRange(
 }
 
 function getEndIndex(geometry: Geometry, endOffset: number): number {
+  if (geometry.getCount() === 0) {
+    return 0;
+  }
+
   const index = geometry.findIndexAtOffset(endOffset);
 
   if (geometry.getOffset(index) === endOffset) {

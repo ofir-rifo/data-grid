@@ -1,6 +1,22 @@
 # POC-V1 fast-scroll investigation
 
-Original investigation: 2026-10-03. Updated: 2026-10-17. Status: investigation in progress; POC not formally validated. Historical measurements below predate the opt-in flushSync experiment.
+Original investigation: 2026-10-03. Updated: 2026-10-18. Status: investigation in progress; POC not formally validated. Historical measurements below predate the opt-in flushSync experiment.
+
+## PR #3 validation review — 2026-10-18
+
+See [the acceptance/evidence ledger](../../docs/POC-VALIDATION.md) and the
+[proposed hosted measurement contract](../../docs/PERFORMANCE-MEASUREMENT.md).
+PR #2's six Chromium/development cases passed on hosted CI; current PR #3
+strengthens those same cases with negative-edge clamping, same-task writes,
+element-count checks and both-axis containment synchronization. Deterministic
+tests also cover empty-axis correctness and mount/scroll/unmount state. Exact
+current execution results belong in project status/PR-head CI, not the historical
+measurement tables below. No native trace or new performance/memory data is added.
+
+Production recommendation remains **NO-GO pending exit evidence**, not a finding
+that the architecture must be replaced. Default-off flushSync, §17 stretching
+scope and the distinction between settled DOM and actual presented frames remain.
+Numerical timing/memory budgets are new proposals requiring Tech Lead review.
 
 ## Manual flushSync experiment — 2026-10-17
 

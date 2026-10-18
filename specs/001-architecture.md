@@ -1,8 +1,8 @@
 # DataGrid Architecture Specification
 
 **Status:** Draft  
-**Version:** 0.2
-**Date:** 2026-10-17
+**Version:** 0.3
+**Date:** 2026-10-18
 
 ---
 
@@ -41,32 +41,32 @@ The grid must follow these principles:
 
 Responsibilities include:
 
-* Grid state
-* Row model
-* Column model
-* Sorting
-* Filtering
-* Grouping
-* Selection
-* Navigation model
-* Focus model
-* Column state
-* Row geometry
-* Column geometry
-* Data-source contracts
-* Query model
-* Plugin contracts
+- Grid state
+- Row model
+- Column model
+- Sorting
+- Filtering
+- Grouping
+- Selection
+- Navigation model
+- Focus model
+- Column state
+- Row geometry
+- Column geometry
+- Data-source contracts
+- Query model
+- Plugin contracts
 
 `grid-core` must not depend on:
 
-* React
-* JSX
-* DOM APIs
-* CSS/SCSS
-* `window`
-* `document`
-* HTTP clients
-* AI providers
+- React
+- JSX
+- DOM APIs
+- CSS/SCSS
+- `window`
+- `document`
+- HTTP clients
+- AI providers
 
 ---
 
@@ -76,21 +76,21 @@ Responsibilities include:
 
 Responsibilities include:
 
-* React components
-* DOM rendering
-* Headers
-* Rows
-* Cells
-* Virtualization
-* Scroll handling
-* Pointer events
-* Keyboard event translation
-* DOM focus
-* React slots
-* Custom renderers
-* ARIA attributes
-* Accessibility behavior
-* CSS/data attributes
+- React components
+- DOM rendering
+- Headers
+- Rows
+- Cells
+- Virtualization
+- Scroll handling
+- Pointer events
+- Keyboard event translation
+- DOM focus
+- React slots
+- Custom renderers
+- ARIA attributes
+- Accessibility behavior
+- CSS/data attributes
 
 Dependency direction:
 
@@ -120,9 +120,9 @@ interface GridDataSource<T> {
 
 The grid must be capable of working with:
 
-* local data
-* remote/server data
-* future worker-backed processing
+- local data
+- remote/server data
+- future worker-backed processing
 
 without knowing how the data is obtained.
 
@@ -208,11 +208,11 @@ interface RenderWindow {
 
 The render window is derived from:
 
-* scroll position
-* viewport size
-* row geometry
-* column geometry
-* virtualization buffer/overscan policy
+- scroll position
+- viewport size
+- row geometry
+- column geometry
+- virtualization buffer/overscan policy
 
 ---
 
@@ -222,8 +222,8 @@ Only rows required for the current viewport and configured render buffer should 
 
 The implementation must support:
 
-* fixed row heights
-* variable row heights
+- fixed row heights
+- variable row heights
 
 The initial POC uses fixed row heights only. Variable row heights remain a production requirement; no variable-geometry implementation or API is defined by this draft. See [POC-V1](features/POC-V1-virtualization.md) for the fixed-geometry scope and explicit non-goals.
 
@@ -281,19 +281,29 @@ The component records handler time, render start, window-calculation duration, a
 
 Evidence must remain separated:
 
-| Evidence | Current status | What it does not prove |
-| --- | --- | --- |
-| Source inspection | Existing architecture/flag and prepared tests inspected | Runtime correctness or timing improvements |
-| Historical automated results | Investigation document reports 27 unit tests, typecheck, lint with four warnings, and 13 Chromium production tests passing before flushSync | Current revision or flag-mode coverage; Firefox/WebKit correctness |
-| Manual observation | User reports improvement with flag enabled and recurrence when disabled | Measured speedup or universal fix |
-| Current targeted verification | Six Chromium/development containment/flag cases, targeted app/e2e typecheck, and targeted lint passed | Full suites, production, other browsers, performance/memory/scalability, or native painted-frame correctness |
-| Historical uncovered rAF samples | Pre-paint DOM coverage observations | Actual painted blank-frame counts or compositor latency |
+| Evidence                         | Current status                                                                                                                              | What it does not prove                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Source inspection                | Existing architecture/flag and prepared tests inspected                                                                                     | Runtime correctness or timing improvements                                                                   |
+| Historical automated results     | Investigation document reports 27 unit tests, typecheck, lint with four warnings, and 13 Chromium production tests passing before flushSync | Current revision or flag-mode coverage; Firefox/WebKit correctness                                           |
+| Manual observation               | User reports improvement with flag enabled and recurrence when disabled                                                                     | Measured speedup or universal fix                                                                            |
+| Current targeted verification    | Six Chromium/development containment/flag cases, targeted app/e2e typecheck, and targeted lint passed                                       | Full suites, production, other browsers, performance/memory/scalability, or native painted-frame correctness |
+| Historical uncovered rAF samples | Pre-paint DOM coverage observations                                                                                                         | Actual painted blank-frame counts or compositor latency                                                      |
 
 Observer delivery can coalesce intermediate commits; a layout effect is not a paint timestamp. Memory, tracing, and native-scroll procedures are prepared in [the measurement plan](../docs/PERFORMANCE-MEASUREMENT.md), not executed. No continuous memory sampler or additional application instrumentation is introduced.
 
 ---
 
 # 12. Remaining POC Validation and Exit Decision
+
+PR #3's [validation review](../docs/POC-VALIDATION.md) maps each requirement to
+evidence and gaps. Its only engine correction is a zero-count end-index guard;
+the nonempty algorithm, renderer and default-off scheduling are preserved. New
+deterministic/state and strengthened six-case browser coverage do not replace
+current timing, native presented-frame, memory/scaling or browser-scope decisions.
+Recommendation: **NO-GO for production while evidence is incomplete**, not an
+unsupported `ARCHITECTURE CHANGE REQUIRED` verdict. Proposed numerical measurement
+budgets remain subject to Tech Lead approval; they are not requirements adopted
+by this architecture draft or values inferred from historical timings.
 
 The authoritative acceptance requirements remain [POC-V1 sections 12–15 and 19](features/POC-V1-virtualization.md). This draft does not add numerical performance targets or relax those requirements.
 
