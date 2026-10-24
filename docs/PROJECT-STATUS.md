@@ -1,5 +1,133 @@
 # DataGrid project status
 
+## PR #6 hosted verification PASS — 2026-10-24
+
+Regex correction commit `21fd06b2828dcac2ac8568b81e71da7be272a6bb` passed both
+required GitHub-hosted checks: [CI run 40092392388](https://github.com/ofir-rifo/data-grid/actions/runs/40092392388)
+and [Conventions run 40092392316](https://github.com/ofir-rifo/data-grid/actions/runs/40092392316).
+Hosted Ubuntu 24.04 evidence: typecheck PASS; nine engineering policy tests PASS;
+standards PASS (zero errors, nine documented legacy warnings); advisory Knip step
+completed with findings; all 40 application unit tests across seven files PASS;
+Vite build PASS; Chromium installation and all six bounded regressions PASS.
+No skipped verification step in this successful CI job. These are CI correctness
+results, not performance validation or production acceptance.
+
+Local verification: 157 policy/security tests, syntax and whitespace PASS;
+exhaustive UTF-16 character-class equivalence PASS. This following documentation
+checkpoint changes no executable code; its own final-head Actions results are
+reported in delivery. PR #6 remains Draft. No local build/browser/performance or
+supervisor run, no protections or PR #4/#5 changes. Required description-check
+deployment/activation and independent security acceptance remain pending as
+documented. Performance HOLD; production POC NO-GO.
+
+## PR #6 CI lint correction — 2026-10-24, pre-push evidence
+
+Inspected actual GitHub-hosted CI run 40091897174 at head 143277b: typecheck
+and all nine engineering policy tests passed; standards failed with five errors
+(two no-useless-escape, three no-regex-spaces). Conventions run 40091897176 passed.
+Later unit/build/Chromium steps were skipped. Nine legacy warnings were not errors.
+
+Corrected only redundant character-class escapes and literal-space regex spelling.
+PASS locally: 157 serial dependency-free policy/security tests, changed-module
+syntax checks, Git whitespace checks; exhaustive comparison confirms identical
+character membership across all 65,536 UTF-16 code units. No canonical-policy,
+workflow, permissions or status-reporter behavior changes; no rule suppressions.
+
+GitHub-hosted CI and Conventions execution is explicitly authorized for this fix.
+At this pre-push checkpoint the new hosted results are not yet available; the final
+delivery report identifies the pushed head and actual complete results. No local
+build/browser/performance/supervisor workloads. PR #6 stays Draft, protections and
+PR #4/#5 untouched. Trusted-policy bootstrap/activation limits remain separate from
+CI success. Performance HOLD; production POC NO-GO.
+
+## PR #6 final SHA compatibility review — 2026-10-24
+
+Verified official GitHub variable/event/context/rerun documentation. It defines
+event SHA and workflow-file SHA separately without a universal equality promise;
+no actual hosted mismatch observed or claim that ordinary main commits must
+produce one. Replaced equality with independent SHA validation, retaining exact
+trusted main workflow ref and checkout HEAD == workflow SHA. Workflow YAML,
+permissions, head-SHA status publication and canonical policy are unchanged.
+
+PASS: 157 dependency-free serial tests, all JS syntax checks and Git whitespace
+checks. Coverage includes all six actions with equal/different SHA metadata,
+future-main/rerun cases, stale head/body and status-write failure interleavings.
+Corrected misleading no-success diagnostic: accepted success with lost response
+and failed recovery leaves remote state unknown. Reproduced documented body-edit
+during final POST race; status/text writes are not transactional. No additional
+locally fixable critical defect found; no architecture expansion undertaken.
+
+**BLOCKED** for trusted bootstrap/activation and actual merge enforcement; hosted
+behavior remains unverified. Full evidence and limitations:
+[security report](PR-DESCRIPTION-SECURITY.md). PR #6 stays Draft; no rules/settings,
+PR #4/#5, dependency or prohibited workload changes. Performance HOLD; POC NO-GO.
+Latest PR-body update returned connector 403; complete canonical manual body with
+157-test evidence is saved as `_tmp_pr6-final-body.md` and passes the local CLI.
+
+## PR #6 trust-boundary hardening — 2026-10-24
+
+Historical P1 checkpoint; latest verification is the SHA review above.
+
+P1 finding confirmed: PR merge-ref YAML and scripts could certify themselves.
+Implemented main-selected pull_request_target workflow, pinned trusted workflow
+SHA checkout, unchanged canonical content policy, live API body/head validation,
+head-SHA PR description commit status and CODEOWNERS routing. No PR code executes.
+The status writer has narrowly scoped statuses:write, contents/pull-requests:read;
+no dependency installation, code/settings writes, caches, builds or browsers.
+
+PASS: 135 dependency-free format/security/static tests and new JS syntax checks
+on 2026-10-24. The original policy/validator/local CLI/template files are unchanged.
+No Nx/pnpm execution this task; standards-test/standards/typecheck NOT RUN because
+dependencies are unavailable and installation is prohibited. Hosted scheduling,
+fork status publication/source, duplicate-name attacks and merge blocking NOT RUN.
+
+Current GitHub observation: PR #6 open Draft, branch chore/pr-description-enforcement,
+main base 27b4f16. Protect main still requires only the two existing checks; zero
+approvals and no required owner review. No rules/settings or PR #4/#5 changes.
+Main lacks the trusted policy, so PR #6 cannot self-bootstrap trusted validation.
+Delivery uses [skip ci] to avoid existing prohibited build/browser CI; once deployed,
+the target workflow is not suppressed by that marker. No protections are bypassed.
+
+**BLOCKED** for activation/end-to-end assurance. CODEOWNERS alone is not enforcement;
+required status name/source is not workflow identity. PR #6 title/body update also
+returned connector 403; validated manual replacement is preserved locally and
+described in the security report. Branch fixes can be pushed without modifying PR
+metadata or its Draft state. Remaining review/activation,
+external-App/organization alternatives, stale-status windows and exact bootstrap:
+[security report](PR-DESCRIPTION-SECURITY.md),
+[trust specification](../specs/pr-description-trust-boundary.md). Self-review is
+not independent acceptance. Performance HOLD; production POC NO-GO.
+
+## PR description policy milestone — 2026-10-24
+
+Historical first delivery; superseded by PR #6 hardening above where inconsistent.
+
+Delivery: branch pushed (`3d5b9e4` implementation); Draft PR creation blocked by
+connector 403 `Resource not accessible by integration`. No PR created. Validated
+description and manual Draft creation steps are preserved in the delivery artifacts.
+
+Implemented on isolated `chore/pr-description-enforcement` from main `27b4f16`:
+specified canonical format, executable section policy, generated GitHub template,
+dependency-free event validator, read-only PR workflow, regression tests and
+[operational guidance](PR-DESCRIPTIONS.md). All future Codex PRs must conform.
+PASS: Node regression suite, 100 tests on 2026-10-24, including CLI, template
+consistency and static workflow/security contracts. Initial 97/100 result exposed
+a template-prompt matcher defect; fixed and rerun successfully.
+
+NOT RUN: Nx standards-test/standards/typecheck, installed tooling unavailable.
+Read-only Nx discovery unexpectedly attempted pnpm auto-install and failed on DNS;
+stopped without installing/committing dependencies. Hosted CI deliberately skipped
+on delivery to avoid existing build/Chromium workloads. No performance, Stage 0,
+canary, browser or build executed. Self-review does not constitute Tech Lead approval.
+
+Read-only GitHub inspection: active Protect main ruleset 25351835 requires the two
+existing checks; `PR description` is not required. Classic protection inspection
+blocked by connector 403; no settings changed. Activation and independent merge
+blocking verification are pending human action. PR #4/#5 remain untouched; both
+current descriptions would fail. Existing local dirty supervisor work preserved.
+See [journal](AI-DEVELOPMENT-JOURNAL.md), policy and delivery report for evidence,
+limits and next steps. Performance HOLD; production POC NO-GO remains unchanged.
+
 Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase

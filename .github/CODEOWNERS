@@ -1,0 +1,11 @@
+# Review routing only until required code-owner review is explicitly activated.
+# Base-branch ownership applies; include this file and every workflow to prevent
+# an added workflow escaping the documented review boundary.
+/.github/CODEOWNERS @ofir-rifo
+/.github/workflows/ @ofir-rifo
+/.github/scripts/ @ofir-rifo
+/.github/pull_request_template.md @ofir-rifo
+/specs/pr-description-policy.md @ofir-rifo
+/specs/pr-description-trust-boundary.md @ofir-rifo
+/docs/PR-DESCRIPTIONS.md @ofir-rifo
+/docs/PR-DESCRIPTION-SECURITY.md @ofir-rifo
