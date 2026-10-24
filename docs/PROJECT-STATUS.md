@@ -1,5 +1,25 @@
 # DataGrid project status
 
+## PR #6 hosted verification PASS — 2026-10-24
+
+Regex correction commit `21fd06b2828dcac2ac8568b81e71da7be272a6bb` passed both
+required GitHub-hosted checks: [CI run 40092392388](https://github.com/ofir-rifo/data-grid/actions/runs/40092392388)
+and [Conventions run 40092392316](https://github.com/ofir-rifo/data-grid/actions/runs/40092392316).
+Hosted Ubuntu 24.04 evidence: typecheck PASS; nine engineering policy tests PASS;
+standards PASS (zero errors, nine documented legacy warnings); advisory Knip step
+completed with findings; all 40 application unit tests across seven files PASS;
+Vite build PASS; Chromium installation and all six bounded regressions PASS.
+No skipped verification step in this successful CI job. These are CI correctness
+results, not performance validation or production acceptance.
+
+Local verification: 157 policy/security tests, syntax and whitespace PASS;
+exhaustive UTF-16 character-class equivalence PASS. This following documentation
+checkpoint changes no executable code; its own final-head Actions results are
+reported in delivery. PR #6 remains Draft. No local build/browser/performance or
+supervisor run, no protections or PR #4/#5 changes. Required description-check
+deployment/activation and independent security acceptance remain pending as
+documented. Performance HOLD; production POC NO-GO.
+
 ## PR #6 CI lint correction — 2026-10-24, pre-push evidence
 
 Inspected actual GitHub-hosted CI run 40091897174 at head 143277b: typecheck

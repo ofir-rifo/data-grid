@@ -1,5 +1,21 @@
 # AI development journal
 
+## 2026-10-24 — PR #6 hosted verification completed
+
+Pushed behavior-preserving regex corrections in `21fd06b`. CI run 40092392388 and
+Conventions run 40092392316 both succeeded on GitHub-hosted Ubuntu 24.04 runners.
+Inspected complete job steps and logs: typecheck; 9 engineering policy tests;
+standards with 0 errors/9 legacy warnings; advisory Knip findings; 40 unit tests
+across 7 files; Vite build; Chromium install; all 6 bounded browser tests passed.
+Previously skipped later stages actually ran successfully. Existing warnings and
+advisory findings were not suppressed or cleaned up outside scope.
+
+No further executable correction was needed. This documentation-only checkpoint
+records those actual results; final-head CI confirmation is reported in delivery.
+No local heavy workloads, dependencies, workflow/protection changes or other PR
+mutations. PR #6 remains Draft. Hosted correctness does not establish active trusted
+description enforcement or production/performance validation. HOLD/NO-GO preserved.
+
 ## 2026-10-24 — PR #6 hosted CI lint correction
 
 Reviewed original hosted job 120866114369 (run 40091897174): five confirmed ESLint
