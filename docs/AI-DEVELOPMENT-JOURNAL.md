@@ -1,5 +1,197 @@
 # AI development journal
 
+## 2026-10-24 — Static exit-proof correction with retained native identity
+
+Read failed batch raw result, fixture stdout, parent evidence and engineering report;
+reviewed pending source/lifecycle changes against PR4 HEAD. Exact native false
+predicate for 8264 remains UNKNOWN: old !member and WAIT_TIMEOUT paths were not
+individually recorded. Confirmed source defect: reopening a numeric PID and gating
+exit proof on present job membership provides no retained identity continuity.
+Windows references distinguish retained process-object lifetime from running
+membership; linked in the amended local protocol specification.
+
+Implemented GridJob-owned telemetry identities with query/synchronize-only native
+handles, native PID+creation FILETIME validation, established job membership and
+retention through exit. Temporary managed wrappers must match; expected failed
+lookup uses only retained native exit. Access denial/native API failures are not
+silently skipped. Reads, proof and close share telemetrySync; recoverySync can take
+that lock but no reverse path exists. Dispose/deferred cleanup share the existing
+bounded allowance, require known exits/confirmed handle close and retain failures.
+No termination uses the new read-only handles. Original startup/teardown ownership,
+history dedup, deadlines, memory limits and all parent PASS requirements preserved.
+
+Self-review added explicit native-close confirmation (SafeHandle.IsClosed alone
+cannot establish success), and ensured unresolved identity ownership blocks strict
+proof/owner release. New proof snapshots expose native wait/error/time and identity
+metadata before forced cleanup. No invented historical evidence. First observation
+after exit remains a documented fail-closed case; no general monitor/recovery loop.
+Added pure unexecuted identity/wait/native-error/timeout-report predicates; these
+launch no processes. Compilation with warnings as errors passed without invoking
+methods. Syntax/whitespace checks and complete scoped patch prepared for review.
+
+No runtime retries, canaries, Nx performance, builds, browsers, benchmarks, installs,
+policy changes or publication. No PR5/PR6 interaction. Pre-existing .gitignore change
+(/.worktrees/) left untouched and excluded from this PR4 package; local-runner
+unchanged/untracked/excluded. Performance HOLD, production NO-GO. Previous failed
+runtime summary is unchanged; independent static acceptance and runtime remain pending.
+
+## 2026-10-24 — End-to-end PR4 audit and one failed harmless batch
+
+User authorized autonomous static remediation, then at most one harmless batch after
+release gate, and commit/push only if verification succeeded. Audited 15-file PR
+scope and pending native ownership, admission, deferred cleanup/history, capture,
+monitoring/proof split and launcher isolation. Self-review is not independent review.
+Fixed two further pre-run issues: expected process exits could mask unexpected
+watchdog reasons/secondary cleanup errors, and timeout capture owner lacked explicit
+successful-path disposal. Added rejection regression and sampled guard diagnostics.
+No resource limits/deadlines changed. Compilation with warnings as errors, JS syntax,
+PowerShell parsing and whitespace passed. Resolved Nx target confirms isolation.
+Nx native-cache EPERM fell back to original module; read-only configuration query
+ultimately exited 0. Separate CIM query was denied; no permissions/settings changed.
+
+Static gate/source hashes saved under Documents/Codex/PR4-final-review-2026-10-24.
+One authorized Nx perf-local-verify batch exited 1; no retries. Launcher elapsed
+5755.5713ms, Nx 5.8s, command tool 7.8410791s. Seven groups passed, launcher-timeout
+failed, final sentinel group not run. Exact command/matrix in SUPERVISOR-VERIFICATION.
+Evidence: datagrid-performance/2026-10-24T07-54-06-308Z-verify under Documents/Codex.
+Fixture timeout requested retained-handle kill of host 8264; parent telemetry lookup
+then found that PID absent and native confirmation returned false. Guard terminated
+fixture (exit 1) before its report persisted. Exit/membership race likely, exact
+membership/wait result unknown. No implementation changes after failure.
+
+Parent persisted complete diagnostics/capture (475 stdout, 0 stderr), empty job,
+retained exited handles, cleanupVerified true and sentinel alive before forced
+cleanup. This does not replace failed timeout proof: overall teardownVerified false,
+final sentinel scenario incomplete. Supplementary read-only inventory found 0/34
+recorded PIDs present. Scoped sampled peak owned 546463744 bytes, available minimum
+18554380288 bytes, four recorded incomplete samples. No reported instability; no
+hardware or performance conclusions. Natural fallback success, full outer expiration,
+overflow/nonempty stderr and native fault/thread schedules remain NOT VERIFIED.
+
+GitHub read-only metadata: PR4 draft/open/mergeable, head 6f1ea82, base 27b4f16;
+published-head CI and Conventions success. These do not validate local changes.
+Verification failure blocks commit/push/publication. Preserved user local-runner
+hash F4889622EC887AEA5B9BFA594CCBCEEB9EF5BEA4D29CF1D27E6D2A378019A56A.
+No Stage0/build/browser/benchmark, dependency/policy or product changes. Export full
+patch and failure review package; stop for Tech Lead review. Performance HOLD;
+production POC NO-GO. Prior entries remain historical.
+
+## 2026-10-24 — Separate monitoring from teardown certification; static only
+
+Root cause: GridGuard sampled strict Pids during ordinary startup. The admission
+and generation checks correctly rejected teardown proof but consequently aborted
+live telemetry. Traced all safety-tooling Pids/Observe/WorkingSet/Stop/Dispose calls.
+Kept strict callers for ownership/proof; introduced live member observation with
+explicit incomplete coverage and immediate failure for settled recovery ownership.
+The independent watchdog enforces all existing sample limits plus a 100ms monotonic
+coverage-gap deadline. Unassigned suspended child memory is temporarily unobserved:
+documented bounded fail-closed behavior, not a claim of full startup monitoring.
+
+Self-review corrected two additional sample-edge issues: startup settling within a
+sample must not erase initial incompleteness, and a late complete sample must not
+reset an already expired gap. Shared native inventory now rejects incomplete counts.
+WorkingSet keeps its previous member-only meaning; watcher totals include its host.
+Added deterministic schedule/error/deadline cases to the existing harmless suite,
+without executing them. Native Job Object flags/memory cap, watchdog ownership,
+deadlines, history and successful-teardown assertions remain intact. No new workers,
+retries, workloads, dependencies, policy changes or production code changes.
+
+Static three-file C# compilation `/warn:4 /warnaserror+` passed; no supervisor methods
+invoked. Whitespace/source review and complete source patch prepared for independent
+review. Real scheduling/native failures remain unverified, including the existing
+three NOT VERIFIED cases. Performance HOLD; production NO-GO. Local runner preserved.
+
+## 2026-10-24 — Full historical error recording with identity dedup; static only
+
+Traced CompleteStartup, FinishTeardown, Stop, Dispose, explicit completion and late
+startup cleanup. FinishTeardown's entry-count slice omitted incoming originals;
+CompleteStartup without handoff and cleanup after it also lacked ledger coverage.
+All boundaries now record full lists through a synchronized reference-identity
+dedup set. Admission/precondition rejection records before throwing. Distinct
+exception instances are retained even with identical text. Current-attempt cleanup
+proof retains its independent error-count gate; no ledger mutation sets/clears
+confirmation and later success never erases historical failures.
+
+Added unexecuted reference-count/public-snapshot assertions before and after
+deferred cleanup, with and without handoff, repeated stages/idempotence and distinct
+matching-message exceptions. Static compilation warn:4/warnaserror+ and whitespace
+PASS; manual path/lock/proof self-review completed. No fixture/method/test execution.
+Changed windows-job.cs, captured-process.cs and three required evidence documents;
+complete updated source patch includes earlier guard fixture registration too.
+No runtime/canary/build/Chromium/performance, dependencies/policy/production changes,
+commit/push/PR update/merge. Previous runtime PASS remains historical. Performance
+HOLD / production POC NO-GO; independent static review is the next step.
+
+## 2026-10-24 — Close deferred-disposal responsibility gap; static only
+
+Added explicit disposal-request/cleanup-owner state. Last settled startup or the
+current teardown owner performs one synchronous bounded handoff; atomic metadata
+claim/release prevents a lost completion. Competing cleanup callers fail immediately.
+If proof fails, retained CleanupOwner is exposed through GridTeardownException;
+CompletePendingDisposal or a later Dispose is explicit, never a retry worker.
+TeardownFailures retains history and DeferredTeardownConfirmed requires native
+process exits, empty job and handle release. Kept assigned native Confirmation
+handles instead of relying on managed wrappers that error paths may dispose.
+Normal kill-on-close semantics and external final/sentinel assertions remain.
+Shared deferred wait/poll allowance 1000ms; existing resource/outer timers unchanged.
+
+Added unexecuted deterministic schedules for multiple startups, busy teardown,
+completion-before/after-disposal, proof timeout, retained/actionable owner, explicit
+later completion, early explicit rejection without consuming handoff, error
+preservation and idempotence. No real child needed by these
+new schedules; no tests/canaries were run. Three-source C# compilation with warn:4/
+warnaserror+ PASS, whitespace PASS. Manual failure/lock/proof/budget self-review
+performed; not an external analyzer or runtime concurrency validation.
+
+Updated windows-job.cs, captured-process.cs, guard-verification.cs and the three
+evidence docs; exported complete patch against PR #4 HEAD for review. local-runner
+preserved. No dependency/policy/production changes, workloads, builds, Chromium,
+commit/push/PR update/merge. Failed native termination or kernel hangs remain
+unconfirmed failure, not guaranteed recovery; incompleteCaptures stays passive.
+Historical passing batch does not validate this revision. Performance HOLD / POC NO-GO.
+
+## 2026-10-24 — Startup lifecycle and teardown admission, static only
+
+Removed active-start inventory exemption. Added explicit startup states/reservations
+settled by outer finally in both startup methods, including native creation failure.
+Stop/Dispose close admission and fail while startup is active; Dispose retains the
+job, and recovery sweeps leave active-start handles to their startup owner. Pids
+rejects active/unresolved reservations and generation changes during enumeration.
+No empty-job proof can bypass an active startup. Added unexecuted synthetic cases
+for injected creation exception/error identity, transfer/unresolved states, active
+inventory, Stop/Dispose interleaving, job retention and rejected future admission.
+No real child is created by these new deterministic fixture cases when later run;
+they use native empty jobs but are not concurrent-thread/native-failure injection.
+
+Compilation of all three C# sources PASS without invoking methods; whitespace PASS.
+Modified windows-job.cs, captured-process.cs, guard-verification.cs plus the three
+evidence docs. No runtime/canary/tests/build/Chromium/performance, commit/push or
+policy/dependency/production changes. Passive unresolvedOwners/incompleteCaptures
+do not recover/reap automatically or guarantee termination/durability past process
+exit. Strict startup inventory rejection can cause a future guard abort; separately
+review and verify rather than weaken proof. Earlier PASS is not validation of this
+revision. Performance HOLD / production POC NO-GO.
+
+## 2026-10-24 — Four reviewed safety corrections, static only
+
+On codex/local-performance-protocol, preserved excluded local-runner. Added pre-
+creation recovery ownership and bounded native exit confirmation independent of
+termination success, distinguishing native wait results/codes. Unconfirmed process/
+thread handles remain owned and prevent inventory-as-teardown proof. Supervisor-
+lifetime roots preserve unresolved ownership after failed bounded cleanup, without
+automatic retry workers. Capture now constructs its owner before reader startup,
+retains it across finally failures, joins readers on exceptional returns, and keeps
+incomplete readers explicitly owned. Pipe SafeHandles transfer only after successful
+owner construction; original and secondary cleanup failures aggregate.
+
+Static compilation of windows-job.cs/captured-process.cs/guard-verification.cs PASS;
+no methods invoked. Whitespace check PASS. No runtime/canary/tests/build/browser/
+performance, dependencies, policy or production changes, commit/push/merge. Changed
+windows-job.cs, captured-process.cs and the three verification/status/journal docs.
+Historical accepted run does not validate this revision. Fault/concurrency paths
+and the three existing NOT VERIFIED cases remain pending. User request was cut off
+at “Do not”; retained all prior restrictions. Performance HOLD / production NO-GO.
+
 ## 2026-10-18 — PR #4 review package; no publication
 
 Tech Lead accepted all executed scenarios from the 5954.6453ms passing batch.

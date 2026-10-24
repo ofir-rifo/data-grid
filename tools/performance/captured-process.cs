@@ -15,11 +15,17 @@ public sealed class GridCapturedProcess : IDisposable {
   readonly long[] total=new long[2], saved=new long[2];
   readonly string[] failures=new string[2];
   readonly DateTime started=DateTime.UtcNow;
+  readonly SafeFileHandle[] handles;
+  readonly bool[] startedDrains=new bool[2];
+  readonly string folder;
+  readonly Action<Exception> onFailure;
+  static readonly HashSet<GridCapturedProcess> incompleteCaptures=new HashSet<GridCapturedProcess>();
   public GridCapturedProcess(Process process,SafeFileHandle output,SafeFileHandle error,string folder,Action<Exception> onFailure) {
-    Process=process;
-    var handles=new[]{output,error};
-    var startedDrains=new bool[2];
-    try {
+    // No readers start until the caller has received this owner successfully.
+    var owned=new[]{output,error};
+    Process=process; handles=owned; this.folder=folder; this.onFailure=onFailure;
+  }
+  public void StartReaders() {
     for(int index=0;index<2;index++) {
       int stream=index;
       drains[index]=new Thread(()=> {
@@ -40,15 +46,6 @@ public sealed class GridCapturedProcess : IDisposable {
       }); drains[index].IsBackground=true;
     }
     for(int index=0;index<2;index++) { drains[index].Start(); startedDrains[index]=true; }
-    } catch(Exception original) {
-      var errors=new List<Exception>{original};
-      try { onFailure(original); } catch(Exception cleanup) { errors.Add(cleanup); }
-      for(int index=0;index<2;index++) {
-        if(startedDrains[index]) { if(!drains[index].Join(500)) errors.Add(new IOException("Capture construction drain timeout")); }
-        else handles[index].Dispose();
-      }
-      throw new AggregateException(errors);
-    }
   }
   public object FinishCapture() {
     foreach(var drain in drains) if(!drain.Join(500)) throw new IOException("Parent pipe capture did not finish within deadline");
@@ -59,7 +56,20 @@ public sealed class GridCapturedProcess : IDisposable {
       stdoutBytes=total[0],stderrBytes=total[1],stdoutSaved=saved[0],stderrSaved=saved[1],
       stdoutTruncated=total[0]>saved[0],stderrTruncated=total[1]>saved[1],captureLimitPerStream=65536};
   }
-  public void Dispose() { Process.Dispose(); }
+  public void Dispose() {
+    var errors=new List<Exception>(); bool incomplete=false;
+    for(int index=0;index<2;index++) {
+      if(startedDrains[index]) {
+        if(!drains[index].Join(500)) { incomplete=true; errors.Add(new IOException("Capture reader cleanup unconfirmed: "+index)); }
+      } else try { handles[index].Dispose(); } catch(Exception error) { errors.Add(error); }
+      if(failures[index]!=null) errors.Add(new IOException(failures[index]));
+    }
+    // Never close a live reader's handle underneath its synchronous Read. Keep
+    // an explicit owner if bounded joining cannot establish completion.
+    lock(incompleteCaptures) { if(incomplete) incompleteCaptures.Add(this); else incompleteCaptures.Remove(this); }
+    if(!incomplete) try { Process.Dispose(); } catch(Exception error) { errors.Add(error); }
+    if(errors.Count>0) throw new AggregateException("Capture cleanup failed",errors);
+  }
 }
 
 public sealed partial class GridJob {
@@ -75,9 +85,15 @@ public sealed partial class GridJob {
   public GridCapturedProcess StartCaptured(string executable,string arguments,string cwd,string folder,Action<Exception> onFailure) {
     var security=new SECURITY{length=Marshal.SizeOf(typeof(SECURITY)),inherit=1};
     IntPtr outRead=IntPtr.Zero,outWrite=IntPtr.Zero,errRead=IntPtr.Zero,errWrite=IntPtr.Zero,input=IntPtr.Zero,list=IntPtr.Zero,handles=IntPtr.Zero;
-    bool initialized=false,retained=false; Process tracked=null;
-    Exception primaryFailure=null;
+    bool initialized=false; Process tracked=null;
+    GridCapturedProcess capture=null;
+    SafeFileHandle readerOut=null,readerErr=null;
+    var errors=new List<Exception>();
+    bool exceptionalCleanupAttempted=false;
+    var child=ReserveChild();
     try {
+    try {
+      CheckStartupAdmission();
       Check(CreatePipe(out outRead,out outWrite,ref security,4096)); Check(CreatePipe(out errRead,out errWrite,ref security,4096));
       Check(SetHandleInformation(outRead,1,0)); Check(SetHandleInformation(errRead,1,0));
       input=CreateFile("NUL",0x80000000,3,ref security,3,0,IntPtr.Zero); Check(input!=new IntPtr(-1));
@@ -93,37 +109,52 @@ public sealed partial class GridJob {
       start.start.input=input; start.start.output=outWrite; start.start.error=errWrite; start.attributes=list;
       INFO info;
       Check(CreateCapturedProcess(executable,new StringBuilder("\""+executable+"\" "+arguments),IntPtr.Zero,IntPtr.Zero,true,0x4|0x08000000|0x80000,IntPtr.Zero,cwd,ref start,out info));
-      Exception original=null;
+      lock(child) { child.Process=info.process; child.Thread=info.thread; child.State=StartupState.Created; }
       try {
-        Check(AssignProcessToJobObject(handle,info.process)); tracked=Process.GetProcessById((int)info.pid); var retainedHandle=tracked.Handle; retained=true;
+        CheckStartupAdmission();
+        Check(AssignProcessToJobObject(handle,info.process)); tracked=Process.GetProcessById((int)info.pid); var retainedHandle=tracked.Handle;
+        lock(child) child.State=StartupState.Assigned;
+        CheckStartupAdmission();
         if(ResumeThread(info.thread)==UInt32.MaxValue) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),"Resume captured process");
-      } catch(Exception failure) {
-        original=failure;
-        try { Check(TerminateProcess(info.process,1)); if(WaitForSingleObject(info.process,1000)!=0) throw new Exception("Captured process cleanup timeout"); }
-        catch(Exception cleanup) { original=new AggregateException(failure,cleanup); throw original; }
-        throw;
-      } finally { CloseBoth(info.thread,info.process,original); }
-      var readerOut=new SafeFileHandle(outRead,true); outRead=IntPtr.Zero;
-      var readerErr=new SafeFileHandle(errRead,true); errRead=IntPtr.Zero;
-      return new GridCapturedProcess(tracked,readerOut,readerErr,folder,onFailure);
+        TransferChild(child,errors);
+      } finally { CloseChildThread(child,errors); }
+      if(errors.Count>0) throw new AggregateException("Native capture startup cleanup failed",errors.ToArray());
+      readerOut=new SafeFileHandle(outRead,true); outRead=IntPtr.Zero;
+      readerErr=new SafeFileHandle(errRead,true); errRead=IntPtr.Zero;
+      capture=new GridCapturedProcess(tracked,readerOut,readerErr,folder,onFailure);
+      readerOut=null; readerErr=null; // Transfer only after owner construction returns.
+      capture.StartReaders();
     } catch(Exception error) {
-      var errors=new List<Exception>{error};
-      if(retained) CleanupRetained(tracked,errors); else if(tracked!=null) tracked.Dispose();
-      primaryFailure=errors.Count>1?new AggregateException(errors):error;
-      throw primaryFailure;
+      errors.Add(error);
     }
     finally {
-      if(initialized) DeleteProcThreadAttributeList(list);
-      if(list!=IntPtr.Zero) Marshal.FreeHGlobal(list); if(handles!=IntPtr.Zero) Marshal.FreeHGlobal(handles);
-      var closeErrors=new List<Exception>();
+      try { if(initialized) DeleteProcThreadAttributeList(list); } catch(Exception error) { errors.Add(error); }
+      try { if(list!=IntPtr.Zero) Marshal.FreeHGlobal(list); } catch(Exception error) { errors.Add(error); }
+      try { if(handles!=IntPtr.Zero) Marshal.FreeHGlobal(handles); } catch(Exception error) { errors.Add(error); }
       foreach(var h in new[]{outWrite,errWrite,input,outRead,errRead}) if(h!=IntPtr.Zero && h!=new IntPtr(-1)) {
-        if(!CloseHandle(h)) closeErrors.Add(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),"Close capture handle"));
+        if(!CloseHandle(h)) errors.Add(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),"Close capture handle"));
       }
-      if(closeErrors.Count>0) {
-        if(primaryFailure!=null) closeErrors.Insert(0,primaryFailure);
-        else if(retained) CleanupRetained(tracked,closeErrors);
-        throw new AggregateException(closeErrors);
-      }
+      try { if(readerOut!=null) readerOut.Dispose(); } catch(Exception error) { errors.Add(error); }
+      try { if(readerErr!=null) readerErr.Dispose(); } catch(Exception error) { errors.Add(error); }
     }
+    if(errors.Count>0) {
+      // Still own capture when finally failed: stop producers before joining,
+      // and attempt every cleanup even after the first failure.
+      try { onFailure(new AggregateException(errors.ToArray())); } catch(Exception error) { errors.Add(error); }
+      TerminateAndConfirm(child,1000,errors);
+      CleanupRetained(tracked,errors);
+      if(capture!=null) try { capture.Dispose(); } catch(Exception error) { errors.Add(error); }
+      exceptionalCleanupAttempted=true;
+    }
+    } finally { CompleteStartup(child,errors); }
+    if(errors.Count>0 && !exceptionalCleanupAttempted) {
+      CleanupRetained(tracked,errors);
+      if(capture!=null) try { capture.Dispose(); } catch(Exception error) { errors.Add(error); }
+    }
+    if(errors.Count>0) {
+      RecordTeardownErrors(errors); // Includes late managed-process/reader cleanup errors.
+      throw new GridTeardownException(this,"Captured process startup/cleanup failed",errors);
+    }
+    return capture;
   }
 }

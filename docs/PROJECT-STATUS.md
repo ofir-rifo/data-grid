@@ -1,5 +1,78 @@
 # DataGrid project status
 
+## Latest PR #4 work — retained identity correction, STATIC ONLY (2026-10-24)
+
+Historical native false predicate remains UNKNOWN: old confirmation could return
+false for current nonmembership or an unsignaled wait, and neither value was saved.
+The membership/exit conflation is a proven source defect. Implemented a read-only
+native identity registry: establish PID/creation time and ownership while live,
+retain the handle, and confirm exit independently of current membership. Identity
+mismatch, missing prior ownership, native errors and incomplete cleanup fail closed.
+Strict teardown, error history, memory limits and watchdog deadlines are preserved.
+Explicit disposal owns bounded identity-handle release; snapshots include proof data.
+
+Pure deterministic cases were added but NOT EXECUTED. C# compilation passed; no
+runtime verification, canaries, Nx performance target, build/browser/benchmark ran.
+The latest runtime result remains the failure below, teardownVerified=false; final
+sentinel scenario not run. See [supervisor review](SUPERVISOR-VERIFICATION.md) and
+[identity protocol specification](LOCAL-PERFORMANCE-PROTOCOL.md) for exact chronology,
+contract, static evidence and limitations. No success is inferred for this patch.
+
+Independent Tech Lead static review is next; any runtime/publication needs separate
+approval. Performance HOLD; production POC NO-GO. No commit/push/PR update/merge or
+PR5/PR6 modifications. Pre-existing unrelated .gitignore edit and untracked local
+runner preserved; both excluded from the PR4-scoped review patch.
+
+## Current PR #4 decision — 2026-10-24: BLOCKED after authorized verification
+
+One harmless batch executed, exit 1, launcher elapsed 5755.5713ms (Nx 5.8s).
+Seven groups passed, including new synthetic lifecycle/error-history/live-telemetry
+regressions; launcher-timeout failed; final sentinel scenario incomplete-not-run.
+Parent watchdog aborted after GetProcessById reported PID 8264 no longer running;
+the exit-confirmation probe returned false. An exit/membership race is likely, but
+which native confirmation condition failed is UNKNOWN. No retries or implementation
+edits after failure. Full results and command: [verification](SUPERVISOR-VERIFICATION.md).
+
+Parent evidence confirms timeout cleanup and sentinel survival before forced cleanup,
+but expected timeout proof and overall teardownVerified remain false. All 34 recorded
+PIDs were absent in supplementary post-run checks. Recorded scoped peak owned memory
+546463744 bytes, minimum available RAM 18554380288 bytes; no reported instability.
+These are not hardware stability or performance results. Evidence directory:
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-24T07-54-06-308Z-verify`.
+
+Pre-run static audit additionally required unexpected guard-abort/cleanup-error
+rejection and explicit capture-owner disposal; C#/JS/PowerShell/whitespace checks
+passed. The following earlier static-only entry is historical preparation, not the
+current runtime result. Three historical NOT VERIFIED cases remain, plus incomplete
+final scenario and native failure/concurrency evidence gaps. PR #4 stays draft at
+6f1ea82; old published-head CI/Conventions succeeded, not the pending local edits.
+No commit/push/PR update permitted because verification failed. Next: Tech Lead
+reviews failure evidence and authorizes any further correction/verification scope.
+Performance HOLD; production POC NO-GO; default-off flushSync preserved. No Stage 0,
+build/browser/benchmark/dependency/policy/product changes. Local runner unchanged,
+untracked and excluded.
+
+## Latest safety-tooling update — 2026-10-24 (static only)
+
+Separated watchdog live telemetry from strict teardown certification to address
+the startup/preflight conflict. Live member memory sampling continues during
+startup, but coverage is explicitly incomplete until stable, settled observations.
+A non-resetting 100ms budget from first incomplete observation fails closed; all
+existing resource thresholds and independent deadlines remain. Suspended processes
+not yet assigned to the job have a documented temporary monitoring/accounting gap;
+this is not claimed as complete coverage or hardware safety. Strict Pids teardown
+checks, native ownership, history and PASS assertions are preserved. Details and
+call-site/interleaving audit: [verification record](SUPERVISOR-VERIFICATION.md).
+
+Added unexecuted deterministic cases for startup/generation transitions, incomplete
+coverage deadlines, telemetry failure propagation, recovery ownership and scheduled
+Stop/startup. C# compilation with warnings as errors passed without invoking code;
+no runtime verification or workloads ran. Historical PASS results do not validate
+this correction. Three historical NOT VERIFIED cases remain explicit. Next step:
+independent static patch review, then separately authorized harmless verification.
+Performance HOLD; production POC NO-GO. No application/dependency/policy changes;
+default-off flushSync preserved; local-runner.mjs unchanged and excluded.
+
 Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase
@@ -760,6 +833,62 @@ required gates have supporting evidence and a reviewed exit decision may GRID-V1
 proposed foundation be approved. Do not merge PR #3 or start production code here.
 
 ## Windows local experiment — 2026-10-18, performance HOLD
+
+**2026-10-24: error-history gap corrected; final independent static review pending.**
+CompleteStartup and FinishTeardown record full error lists; a reference-identity
+set prevents recording the same exception instance twice. Stop/Dispose/explicit
+completion, admission rejection and late startup cleanup use the same ledger.
+Distinct matching-text failures remain separate. Recording does not alter cleanup
+confirmation; later successful release retains earlier failures. Added unexecuted
+original/secondary preservation and identity-dedup assertions, including the public
+TeardownFailures snapshot after deferred cleanup. Compilation with warnings as
+errors/whitespace PASS; source-path self-review completed; no runtime methods ran.
+Updated two sources and three docs; complete three-source patch against PR #4 HEAD
+exported. No limits/deadlines/watchdog changes, commit/push/PR update/merge.
+Performance **HOLD**, production **NO-GO**. Earlier PASS does not validate this source.
+
+**2026-10-24: deferred disposal handoff implemented; independent static review next.**
+After interrupted startup settles, the last startup or current serialized teardown
+owner performs one synchronous bounded cleanup attempt. Failed proof retains the
+owner, leaves confirmation false and exposes CleanupOwner through the exception.
+CompletePendingDisposal provides an explicit later attempt, with no retry worker.
+Assigned native handles remain available for independent exit confirmation even
+if startup's managed wrapper was disposed. Deferred confirmation requires native
+exits, an empty job and successful handle release, under a shared 1000ms wait/poll
+allowance; existing outer deadlines/resources remain. TeardownFailures preserves
+earlier errors after later success. Passive roots do not guarantee termination or
+reap incomplete readers. See [full lifecycle/interleaving review](SUPERVISOR-VERIFICATION.md).
+Added unexecuted deterministic multi-start/busy-owner/failure/explicit-completion
+cases. C# compilation with warnings as errors and whitespace PASS; no tooling
+methods ran. Manual static analysis/self-review completed; no runtime assurance.
+Three sources and three required documents modified; complete patch exported for
+review. No commit/push/PR change. Performance **HOLD**, production **NO-GO**.
+
+**2026-10-24: targeted concurrency correction; static-only, not runtime verified.**
+Both startup paths now settle explicit lifecycle reservations in outer finally,
+including creation failure. Stop/Dispose close admission and reject active startup
+as unconfirmed teardown; Dispose retains its job until startup settles. Recovery
+does not close handles still owned by active startup. Pids has no active-start
+exemption and rechecks startup generation after native enumeration. Conservative
+telemetry rejection during startup may abort a future batch; no compatibility
+claim is made. Added unexecuted deterministic creation-failure/lifecycle/interleaving
+cases to the synthetic group. C# compilation-only/whitespace PASS; no workloads.
+Passive retention registries do not retry, guarantee termination or survive process
+exit; see [details](SUPERVISOR-VERIFICATION.md). Three tooling files plus three
+evidence documents modified. No commit/push. Performance **HOLD** / POC **NO-GO**.
+
+**2026-10-24: PR #4 safety remediations implemented; static checks only.**
+Native startup now reserves recovery ownership before creation and retains unresolved
+process/thread handles; inventory cannot certify teardown while recovery is pending.
+Independent waits run even after termination failure and preserve native codes.
+Capture owners survive exceptional returns; reader startup follows construction,
+and untransferred pipe wrappers dispose deterministically. Incomplete bounded
+cleanup retains explicit supervisor-lifetime owners and fails closed, rather than
+dropping recovery handles or claiming successful teardown. See
+[remediation details/risks](SUPERVISOR-VERIFICATION.md). Compilation-only/whitespace
+PASS; no runtime verification. Earlier nine-group PASS covers the committed source,
+not this revision. Two tooling files and three evidence documents changed; no
+commit/push/merge. local-runner untouched. Performance **HOLD**, production **NO-GO**.
 
 **Current decision: supervisor verification accepted for executed scenarios; PR #4
 review preparation only.** Proposed 15-file scope excludes untouched/untracked

@@ -1,5 +1,458 @@
 # Supervisor hardening and harmless verification — 2026-10-18
 
+## 2026-10-24 — Retained telemetry identity correction; STATIC ONLY
+
+Current deliverable is a reviewable correction, not a successful verification.
+No runtime tests, canaries, Nx target, build, browser or benchmark ran in this task.
+Earlier failed evidence remains unchanged: overall teardownVerified=false; final
+sentinel scenario not executed. Root cause of the historical native false predicate:
+UNKNOWN. Source-level misuse of membership as exit proof: PROVEN by the old code.
+
+Exact historical sequence (UTC, evidence 2026-10-24T07-54-06-308Z-verify):
+
+| Time / source | Observation |
+| --- | --- |
+| 07:54:10.3875882, parent diagnostics | Fixture PID 12784 started via StartCaptured; suspended native startup assigned to parent job before resume; retained creation handle transferred to confirmation ownership |
+| 07:54:10.437, captured fixture stdout | Node fixture spawned CrashOwner PowerShell host PID 8264 through owned-shell; it inherited parent-job containment; nested CrashOwner job created the canary pair |
+| 07:54:11.942, fixture stdout | 1511.8105ms elapsed; libuv retained-handle kill requested for PID 8264, accepted=true; this is a request, not tree-exit proof |
+| Subsequent watchdog reason | GetProcessById(8264) threw ArgumentException; old OpenProcess/membership/wait confirmation returned false, without a nested confirmation exception |
+| 07:54:11.9517895, parent diagnostics | Fixture PID 12784 exited 1 after independent guard stopped the outer owned tree |
+| 07:54:11.9555345 | reported-result.json absent |
+| 07:54:11.9612612, before forced cleanup | Retained handles 12784/8632/36692 exited; empty parent job; sentinel alive; no guard cleanup errors |
+
+The old routine returned false for either `!member` or WAIT_TIMEOUT (258). Neither
+value was persisted. No later empty inventory or PID absence distinguishes them.
+Do not label the precise native predicate proven. Original fixture stdout and all
+parent-owned JSONL/results remain the source of historical evidence.
+
+Implemented protocol: retain a native read-only identity while its PID, creation
+FILETIME, unsignaled state and exact job membership are established. A cached
+handle outlives exit; a temporary managed Process wrapper must match that identity.
+ConfirmTelemetryExit now waits on the retained handle and never reopens the PID or
+queries current membership. Native WAIT_FAILED/error and ownership mismatch fail;
+WAIT_TIMEOUT is not exit. Only an expected failed PID lookup with confirmed retained
+exit is skipped. Removed the prior broad post-lookup HasExited exception escape.
+Memory reads and genuine telemetry failures remain fail-closed.
+
+New identity handles are registered before opening, serialized with closure, retained
+by GridJob until Dispose, and never used to terminate. Strict teardown checks known
+owned handles are signaled; disposal uses the existing shared 1000ms wait allowance.
+CloseHandle success is tracked separately from SafeHandle.IsClosed. Failed wait or
+close leaves ownership/errors retained; passive retention is not a cleanup worker.
+Failed/unvalidated candidate handles are closed without waiting for or terminating
+an unrelated process. No original ownership handle or diagnostic error is discarded.
+Lock audit: recoverySync may acquire telemetrySync; reverse acquisition is absent.
+Closing cannot race a wait on the same retained handle. Stop does not close them.
+
+Future parent/guard snapshots include retained PID, creation time, ownership flag,
+last native wait/error/UTC and handle close state. This does not fill missing
+historical evidence. The amended [protocol specification](LOCAL-PERFORMANCE-PROTOCOL.md)
+defines these contracts and first-observation limitations explicitly.
+
+Added UNEXECUTED pure deterministic cases: known retained exit despite absent current
+membership; live/unsignaled wait rejection; absent/mismatched ownership before wait;
+WAIT_FAILED Win32 code preservation; unexpected wait rejection; failed/unconfirmed
+native close rejection with error preservation; native exception
+identity preservation; PID/creation-time mismatch; absent/null/nonzero fixture exit;
+missing report; fixture self-PASS, wrong timeout observation and wrong abort reason.
+Existing parent retained-tree/job/capture/sentinel assertions remain required.
+Pure cases create no native processes or jobs; they are registered in the existing
+harmless suite but are not executed by compilation. Real error paths remain untested.
+
+Static three-file C# compilation `/warn:4 /warnaserror+`, four JS syntax checks,
+PowerShell parser and `git diff --check` passed, without invoking supervisor/test
+methods. Git emitted existing LF-to-CRLF notices, not compiler warnings. Manual full
+pending-diff self-review is not independent Tech Lead review or runtime validation.
+Unrelated pre-existing .gitignore /.worktrees/ edit preserved and excluded from the
+PR4-scoped patch, as is unchanged untracked local-runner.mjs. No PR5/PR6 actions.
+
+Remaining hazards: exit before first trustworthy identity can still fail closed;
+late telemetry API errors after lookup are not swallowed; simultaneous schedules,
+actual native close/assignment failures, hardware stability and this correction
+remain unverified. Native/kernel stalls and pre-assignment supervisor loss retain
+their earlier limitations. Natural fallback success, full 30s expiration, capture
+overflow/nonempty stderr remain NOT VERIFIED. Performance HOLD; production NO-GO.
+Stop for independent Tech Lead review; no commits, pushes, PR updates or runtime.
+
+## 2026-10-24 — End-to-end attempt: BLOCKED after one authorized batch
+
+Current result supersedes readiness implications in earlier historical entries.
+Exactly one harmless batch ran; no retries or post-failure implementation edits.
+Performance HOLD / production POC NO-GO. No commit, push, PR update or merge.
+
+Pre-run self-review (not independent acceptance) inspected all 15 PR files and
+pending ownership/capture/telemetry changes. Two further defects were corrected:
+ordinary scenarios could accept cleanup without checking unexpected guard aborts,
+and the timeout parent did not dispose its successful capture owner explicitly.
+Ordinary guards now require no abort and no cleanup errors; expected-abort cases
+require their exact reason and no unexpected secondary errors. Sentinel guard is
+stopped/checked before intentional sentinel termination. Capture ownership is
+disposed after bounded drain/exit checks, without disposing its Process wrapper
+again through the non-owning tracked list. Added synthetic rejection regression
+and sampled guard diagnostics (counts, peak owned, lowest available RAM, abort).
+
+Final architecture remains: explicit PowerShell host via direct Node spawn;
+suspended native creation/assignment before resume; Job Object kill-on-close,
+no breakaway, 2.5GiB committed memory; recovery/confirmation native handles;
+serialized teardown and one deferred handoff; explicit retained cleanup owner;
+identity-deduplicated historical errors; strict teardown inventory separate from
+bounded incomplete live sampling. No new background recovery or performance route.
+Atomic assignment at process creation would address the remaining supervisor-crash
+window before assignment, but is a separate design change, not implemented here.
+
+Static release gate and source manifest:
+`C:\Users\ofirr\Documents\Codex\PR4-final-review-2026-10-24\static-release-gate.json`.
+Source patch SHA256 before/after batch:
+`7C8D0696030304D6D3F4818F8C7111BE561835271775319296659C48C1AB11C0`.
+C# Add-Type `/warn:4 /warnaserror+`, four JS `node --check` checks, PowerShell parser,
+and git whitespace checks passed. No supervisor methods ran during compilation.
+Read-only `pnpm nx show project @org/playground --json` completed exit 0 after an
+EPERM native-cache fallback warning; the subsequent verification used the same
+fallback. A separate CIM inventory query was access-denied; it is not cleanup proof.
+
+Exact verification command (workspace root):
+
+```powershell
+$env:NX_DAEMON='false'
+$env:NX_NO_CLOUD='true'
+$env:NX_SKIP_REMOTE_CACHE='true'
+$env:NX_SKIP_NX_CACHE='true'
+$env:NX_ISOLATE_PLUGINS='false'
+$env:NODE_OPTIONS='--max-old-space-size=2048'
+pnpm nx run @org/playground:perf-local-verify --excludeTaskDependencies --skipSync --parallel=1
+```
+
+Exit **1**; launcher elapsed **5755.5713ms**, native-host observation **5753.6257ms**;
+Nx reported **5.8s**, command tool measured **7.8410791s**. The 30s timer excludes
+Nx/setup and is not a total-command or hard real-time guarantee. Entry path remains
+Nx -> verify launcher -> supervisor Verify -> canaries/CrashOwner/timeout fixture;
+no Stage 0, build, browser, benchmark or local-runner route. No dependency/policy
+or production-code changes. Existing thresholds/deadlines were not changed.
+
+Evidence:
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-24T07-54-06-308Z-verify`.
+
+| Scenario | Actual result |
+| --- | --- |
+| limits-and-ownership | PASS |
+| explicit-stop | PASS |
+| kill-on-close | PASS |
+| supervisor-failure | PASS |
+| watchdog-timeout | PASS |
+| synthetic-resource-failures | PASS, includes startup/deferred-disposal/history/live-coverage assertions; synthetic schedules, not native failure injection |
+| evidence-write-failure | PASS |
+| launcher-timeout | FAIL |
+| sentinel-and-teardown | NOT VERIFIED; incomplete-not-run |
+
+Confirmed failure chain: fixture stdout records child host PID 8264 and a retained-
+handle timeout kill request at 1511.8105ms. Parent watchdog then reports
+`Missing live owned-process telemetry: 8264`, caused by GetProcessById throwing
+ArgumentException. The independent confirmation returned false (no nested probe
+exception); evidence does not distinguish nonmembership from an unsignaled wait.
+The guard stopped the outer fixture, which exited 1 before reported-result.json.
+This is a confirmed fail-closed telemetry abort, with a likely exit/membership race;
+the exact native membership/wait outcome remains UNKNOWN. Do not equate it with
+failure to terminate processes or missing parent evidence.
+
+Parent-owned result records cleanupVerified=true, empty Job Object, all three
+retained timeout processes exited, sentinelAlive=true before parent-forced cleanup,
+capture success (475 stdout bytes, 0 stderr, no truncation), no guard cleanup errors.
+Timeout treeTerminationProven=false and overall teardownVerified=false remain
+authoritative: expected-timeout proof and the final scenario did not pass.
+Read-only post-run GetProcessById checks found none of 34 recorded PIDs present,
+with no lookup errors; this is supplementary observation, not retained-handle proof.
+It is saved separately in the review directory as post-run-recorded-pids.json.
+
+Recorded sampled peak owned memory: 546463744 bytes; minimum available RAM:
+18554380288 bytes; recorded incomplete samples: 4. These are scoped samples, not
+global/continuous peaks. No resource-limit violation or machine instability was
+reported. Incomplete samples show the live-coverage path ran; they do not prove
+every startup interleaving or the successful native exit fallback.
+Successful synthetic assertions do not diagnose prior unexplained BSODs.
+
+Still NOT VERIFIED: successful natural telemetry-exit fallback confirmation, full
+30s outer expiration, capture overflow/nonempty stderr, actual native failure paths,
+true simultaneous-thread schedule coverage, hardware stability and performance.
+The native exit fallback was attempted here but did not establish the required proof.
+
+Next: independent review of this failed evidence and a proposed retained-identity
+telemetry design/diagnostic for the exact membership/wait outcome. Do not weaken
+confirmation, patch-and-rerun, or publish based on seven passing groups. Any further
+runtime batch needs explicit approval. PR #4 remains draft at 6f1ea82; existing CI
+and Conventions checks succeeded only for that published head, not these local edits.
+
+## 2026-10-24 — Live telemetry versus teardown proof; STATIC ONLY
+
+Current correction supersedes the preflight startup-inventory blocker at the source
+level only. No verification, canary, Stage 0, browser, build or benchmark ran.
+
+- `Pids()` remains authoritative: settled startup/recovery checks before and after
+  native inventory plus unchanged generation are required. Cleanup, retained-handle
+  assertions, Pair ownership checks and parent-owned timeout evidence still use it.
+- `Observe()` now uses a separate native member inventory, with coverage checked
+  before and after sampling. Active startup or a changed reservation generation
+  marks the sample incomplete; even startup settling during sampling cannot erase
+  its initial incomplete state. Settled raw recovery handles throw immediately.
+  Invalid/truncated native inventory, access denial and other telemetry errors
+  still propagate. The existing independently confirmed exit exception is unchanged.
+- `WorkingSet()` uses the same live observer but rejects incomplete coverage; its
+  return still excludes the supervisor. Watchdog samples include supervisor memory.
+- The watchdog samples all enumerated members and checks every existing resource
+  threshold during incomplete startup. It additionally aborts with
+  `startup-telemetry-incomplete` once 100 monotonic milliseconds have elapsed since
+  its first incomplete observation. Repeated incomplete samples cannot reset this
+  deadline; a complete sample arriving after expiration cannot erase the gap.
+  This is a bounded fail-closed protocol, NOT complete memory coverage: a native
+  process between suspended creation and assignment is outside Job Object memory
+  accounting and member telemetry. No child executes before assignment; native
+  job limits apply after assignment. The 25ms polling cadence/scheduling adds
+  detection delay; native calls, lock contention and OS stalls are not hard real-time.
+  Existing independent overall watchdog and 29.5s/30s launcher bounds remain.
+
+Interleaving review: live observation never holds the admission lock across process
+creation or memory reads. Stop closes admission and retains unresolved startups;
+its independently awaited handles are not replaced by live inventory. A timeout
+still calls Stop and records cleanup errors; it never certifies active startup.
+Concurrent Dispose/native-handle closure remains fail-closed if observation fails.
+No observer exception is converted into startup grace. Static retention registries
+remain passive ownership roots, not background recovery or termination guarantees.
+
+Unexecuted deterministic coverage: active startup observation, settling within a
+sample, complete begin/end generation change, propagated Win32 telemetry exception,
+settled unresolved ownership rejection, strict Pids rejection, scheduled Stop during
+startup, exact coverage deadline, late-complete rejection, timely recovery, immediate
+memory/telemetry failure. New lifecycle fixtures use real empty Job Objects but no
+new native child processes or deliberately failing native APIs. Synthetic handle
+markers are cleared in finally before cleanup. This does not prove thread scheduling,
+real access-denied handling or native API failures at runtime.
+
+Static C# compilation (three files, `/warn:4 /warnaserror+`) and whitespace checks
+are recorded for this correction; no methods/fixtures invoked. Three historical
+NOT VERIFIED cases remain: natural telemetry exit-race fallback execution, full
+30s outer expiration, stdout overflow/nonempty fixture stderr. Current changes
+also remain runtime-unverified. Independent static review required next.
+Performance HOLD; production POC NO-GO; local-runner unchanged and excluded.
+
+## 2026-10-24 — Historical error ledger correction; STATIC ONLY
+
+Confirmed gap: FinishTeardown previously recorded only entries appended after its
+initial errors.Count; CompleteStartup's original errors were not recorded when it
+did not own the handoff, and late managed/reader cleanup could append errors after
+CompleteStartup returned. Caller exceptions retained them but TeardownFailures
+could omit them. Replaced index-sliced recording with full-list recording plus a
+HashSet using ReferenceEqualityComparer.Instance. The ordered ledger records each
+exception instance once, under recoverySync. Distinct exceptions remain distinct
+even with matching messages; wrapper exceptions retain their own context rather
+than being flattened or merged by serialized text.
+
+Source-path audit:
+
+| Boundary | Recording responsibility |
+| --- | --- |
+| CompleteStartup | finally records the full incoming/completion list, with or without owning cleanup |
+| FinishTeardown | finally records the full list, including errors present on entry and added by the handoff |
+| Stop / Dispose | rejected ownership and finally paths record all errors; later FinishTeardown recording is identity-deduplicated |
+| CompletePendingDisposal | precondition, busy-owner and finally paths record their errors; history is never cleared on success |
+| Both startup methods | record the final error list before throwing, including managed/reader cleanup after CompleteStartup |
+| Admission/interruption rejection | record the exception before throwing, including rejection before a startup reservation exists |
+
+Only FinalizeDeferredDisposal retains an entry-count comparison, solely to decide
+whether the current native cleanup/proof attempt succeeded. That comparison no
+longer controls historical recording. The ledger never changes disposalComplete,
+deferredConfirmed, wait budgets, admission, watchdogs or native teardown decisions.
+
+Added UNEXECUTED assertions for original creation failure in the public ledger,
+an early startup failure recorded without handoff, pre-existing owner error through
+FinishTeardown, original+secondary errors after failed and later successful deferred
+cleanup, idempotent completion, repeated recording through multiple boundaries,
+and two distinct exceptions with identical text. Assertions check reference count
+in the internal ledger and presence in the public TeardownFailures snapshot.
+Replacing the correction with the previous slice semantics would omit original
+failures and fail these assertions; this is a static argument, not an executed
+mutant test or verification run.
+
+Three-source C# compilation (/warn:4 /warnaserror+) and whitespace checks PASS;
+manual recording/lock/confirmation self-review completed, no methods/fixtures run.
+This task changed windows-job.cs/captured-process.cs and the three required docs;
+guard-verification.cs remains pending from the earlier fixture-registration change.
+Complete updated source patch against PR #4 HEAD exported for independent review.
+No runtime/canary/build/browser/performance, dependency/policy changes, commit/push/
+PR update/merge. Previous concurrency/native/durability limits and the three NOT
+VERIFIED cases remain. Performance HOLD / production POC NO-GO.
+
+## 2026-10-24 — Deferred disposal responsibility and bounded handoff; STATIC ONLY
+
+Closed the reviewed passive-retention gap with a synchronous cleanup handoff.
+No runtime verification is authorized or performed. The earlier accepted batch
+does not cover this changed implementation or the new deterministic assertions.
+
+Responsibility and proof:
+
+- Dispose records a disposal request and closes startup admission. If startup is
+  active it fails explicitly and retains ownership. The last CompleteStartup, or
+  a teardown caller already holding the cleanup role, takes exactly one automatic
+  deferred cleanup attempt after all startup reservations settle.
+- ClaimTeardown serializes Stop/Dispose/explicit completion using a metadata flag;
+  competing callers fail immediately rather than waiting for another cleanup.
+  FinishTeardown checks settled startup and either claims the handoff or releases
+  that flag under the same metadata lock. CompleteStartup does the complementary
+  check under that lock. Thus completion before/after the owner's release cannot
+  lose the handoff; no background task, timer or unbounded retry loop is added.
+- Failed automatic cleanup leaves the owner retained and confirmation false.
+  The responsible caller may invoke CleanupOwner.CompletePendingDisposal() once
+  explicitly per authorized cleanup attempt (or Dispose again). GridTeardownException
+  carries CleanupOwner so the caller need not discover an object through a private
+  static registry. Calls are not scheduled automatically after a failed handoff.
+  An explicit completion call made before startup settles is rejected without
+  consuming the pending automatic handoff. Stop alone does not request disposal;
+  its responsible caller must still Dispose the job (or retain CleanupOwner).
+- Deferred cleanup terminates the owned job, confirms unassigned recovery-handle
+  exits, confirms assigned-child exit handles and checks empty job membership,
+  then closes the job. Its native wait/poll allowance is shared across those steps:
+  at most 1000ms, within the unchanged outer supervisor deadlines. WAIT_FAILED,
+  timeout, termination or close error prevents confirmation. Existing startup
+  cleanup and reader-join bounds remain separately enforced; this is not a claim
+  that every native API or lock can return during an OS/kernel hang.
+- Successful assignment changes the original process handle's role to a retained
+  Confirmation handle; it is not discarded with a managed Process wrapper.
+  Stop confirms these handles after job termination; normal Dispose preserves
+  kill-on-close semantics and confirms them after closing the job. This avoids
+  certifying deferred cleanup from an empty job while process exit is unknown.
+- DeferredTeardownConfirmed becomes true only after current proof and handle
+  release succeed. TeardownFailures preserves prior original/cleanup exceptions;
+  a later successful release does not turn an earlier failed call into PASS.
+  Both startup methods propagate completion/handoff errors after their finally
+  and dispose any now-unreturned managed/capture owners. Ordinary Dispose handle
+  closure remains distinct from external whole-tree/sentinel verification.
+
+Static interleaving audit:
+
+| Schedule | Required outcome in the implementation |
+| --- | --- |
+| Dispose returns unconfirmed before the last startup settles | Last startup claims the synchronous handoff |
+| Last startup settles while Stop/Dispose owns cleanup | Existing owner claims the handoff before releasing its role |
+| Multiple startups are active | No handoff until all reservations settle |
+| Concurrent Stop/Dispose/explicit completion | One native cleanup owner; other callers fail closed with history retained |
+| Automatic handoff proof fails | No close/confirmation; explicit owner retained; no automatic second attempt |
+| Later explicit completion succeeds | Exit/job/close proof confirmed, registry root removed, old errors retained |
+| Completion called after confirmed release | Idempotent; does not schedule another native attempt |
+
+Added unexecuted regression schedules for all rows (including injected proof
+timeout, actionable exception owner, error identity/history and repeated startup
+  completion not retrying a failed handoff, and early explicit completion not
+  consuming the handoff). They use empty native jobs when later
+executed, not child processes or performance data. They are not simultaneous-thread
+stress tests or evidence of Windows native failure behavior. They remain part of
+the existing synthetic verification group; batch timers/resources are unchanged.
+
+Static checks: three-file C# Add-Type compilation with /warn:4 /warnaserror+ PASS,
+no methods/fixtures invoked; git diff --check PASS. Manual source analysis checked
+admission/cleanup lock ordering, no-lost-handoff schedules, shared wait allowance,
+failure propagation, confirmation gating, kill-on-close separation and no new
+background recovery. No external analyzer or runtime result is claimed.
+
+Remaining limits: native/OS hangs and catastrophic allocation failure cannot be
+made safe by managed timeouts; failed cleanup still cannot guarantee termination.
+unresolvedOwners remains passive after failed attempts, and incompleteCaptures
+remains passive for incomplete readers. Neither provides automatic reaping or
+ownership persistence after supervisor exit. A responsible caller must retain the
+exception/owner and explicitly authorize another cleanup attempt if needed.
+Strict startup telemetry rejection, true threaded/native races, three existing
+NOT VERIFIED cases and all new fault paths remain runtime-unverified.
+Modified only the three safety-tooling sources and required three documents;
+local-runner untouched. No workload/build/browser/dependency/policy changes,
+commit/push/PR update/merge. Performance HOLD / production POC NO-GO.
+
+## 2026-10-24 — Startup/teardown concurrency correction; STATIC ONLY
+
+Replaced Starting exemption with explicit Creating/Created/Assigned/Transferred/
+CreationFailed/Cleaned/Unresolved states plus an InProgress reservation covering
+the entire synchronous startup and its cleanup. Both startup methods complete
+that reservation in an outer finally. StartTracked creation now occurs inside
+its guarded try/catch; injected/native creation failure preserves its original
+error and settles as CreationFailed without a permanently active reservation.
+
+Stop/Dispose atomically close startup admission. New startup is rejected; any
+registered active startup makes teardown fail explicitly. Cleanup sweeps skip
+handles still owned by an active startup, avoiding concurrent handle closure.
+Dispose retains its job handle and roots the owner while startup remains active;
+it cannot dispose the job underneath assignment. Startup checks admission before
+native creation/assignment/resume; late interruption still prevents teardown
+certification because the reservation stays active through final cleanup.
+
+Pids rejects ALL in-progress reservations and unresolved recovery handles, with
+no exemption. It checks a startup-generation token after querying the native job,
+rejecting any startup interleaving even if that startup completed before return.
+After Stop/Dispose, closed admission prevents a new start after an empty inventory.
+Without closed admission an inventory is only a moment-in-time observation, not
+a promise that future startup cannot occur. Telemetry also fails closed on an
+in-progress inventory; this conservative policy may abort a future verification
+batch and needs separate runtime review rather than inferred compatibility.
+
+Added unexecuted deterministic cases to the existing synthetic group: injected
+creation exception through the real guarded startup path, original-error identity,
+settled CreationFailed state, active-start inventory rejection, successful transfer
+state, unresolved assignment marker rejection, Stop/Dispose during reserved startup,
+job-handle retention, closed admission and explicit later final disposal. The
+assignment marker never reaches a native API. These are scheduled interleavings,
+not a simultaneous-thread stress test, nor native CreateProcess-false fault injection.
+
+Static three-file C# compilation PASS; no methods/fixtures invoked. Whitespace
+check PASS. No runtime/canary/build/browser/performance workload, commit or push.
+Modified windows-job.cs, captured-process.cs, guard-verification.cs and these three
+status/verification/journal documents. Previous runtime PASS is historical only.
+
+unresolvedOwners/incompleteCaptures are passive supervisor-lifetime roots: no
+background recovery, guaranteed termination, automatic reaping or durable ownership
+after supervisor exit. Explicit later Dispose can attempt cleanup; absent that call,
+retained owners can remain until exit. Kernel/native hangs and catastrophic failures
+can defeat wall-clock deadlines. Existing resource/deadline/PASS controls remain;
+the three earlier NOT VERIFIED cases and all new fault/concurrency paths remain
+unverified. Performance HOLD / production POC NO-GO; independent static review next.
+
+## 2026-10-24 — Four PR safety remediations; static verification only
+
+Implemented approved P1/P2 review corrections in windows-job.cs/captured-process.cs.
+The user's last sentence ended at “Do not”; prior no-runtime/no-publication limits
+remain in force. No verification/canary/build/browser/performance workload ran.
+
+- Reserve a recovery owner before native process creation. Failed assignment keeps
+  the original native process handle until exit is confirmed; failed close retains
+  process/thread handles. Success transfers ownership only after job assignment
+  and acquisition of the managed retained handle. Pids refuses inventory-as-proof
+  while a recovery child remains. Stop/Dispose also service recovery children with
+  a shared 1000ms native-wait allowance per recovery sweep, not unbounded polling.
+- TerminateProcess failure no longer skips waiting. WAIT_OBJECT_0, WAIT_TIMEOUT,
+  WAIT_FAILED (Win32 code) and unexpected returns are distinct; original, native
+  termination/wait/close and managed cleanup errors aggregate. Managed kill errors
+  likewise do not skip their independent bounded exit wait.
+- Capture construction and reader startup are separate. The local capture owner
+  exists before readers start, remains available across native-finally failure,
+  and is cleaned after producers are stopped. Join/reader/callback errors survive.
+- Safe read-handle locals transfer only after capture construction succeeds;
+  untransferred wrappers dispose in finally. Raw pipe/attribute cleanup attempts
+  remain independent so a cleanup exception does not replace the startup error.
+
+If bounded cleanup cannot establish exit/reader completion, supervisor-lifetime
+registries retain the recovery/capture owners and the operation fails. They do not
+start retry threads, release a potentially live unassigned process's last recovery
+handle, or infer termination from empty job membership. This is evidence-preserving
+failure containment, not a guarantee Windows will honor termination; unresolved
+objects can remain until supervisor exit. Kernel/disk hangs remain outside the
+hard-deadline guarantee. The earlier startup-in-progress inventory exemption in
+this preparation was rejected in review and is superseded by the strict lifecycle
+and generation checks above. Concurrency/fault paths need separately authorized
+review and runtime verification. No deadline/memory budget/PASS assertion was relaxed.
+
+Static C# three-source Add-Type compilation PASS (no methods invoked), whitespace
+check PASS. Historical accepted batch applies to 6f1ea82, not these changed files.
+The three existing NOT VERIFIED cases remain: native exit-race fallback execution,
+full outer-30s expiration, capture overflow/nonempty stderr. New exceptional-owner,
+partial-start, wait-failure and reader-retention paths are also NOT runtime verified.
+Modified two implementation files and verification/status/journal only; local-runner
+untouched, dependencies/policy/production code unchanged, no commit/push/merge.
+Performance HOLD / production POC NO-GO. Await Tech Lead static review.
+
 ## PR #4 review preparation — no publication authorized
 
 Tech Lead accepted the latest executed scenarios recorded below. Proposed scope:

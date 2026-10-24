@@ -1,5 +1,61 @@
 # Windows local performance experiment
 
+## Supervisor verification identity contract — 2026-10-24, STATIC PROPOSAL
+
+This protocol amendment specifies safety-tooling behavior only. Performance HOLD
+and production POC NO-GO remain; it does not authorize any runtime verification.
+
+1. A Job Object PID inventory identifies candidates, not enduring process identity
+   or successful termination. Before relying on an observed candidate, register its
+   read-only handle owner, open a non-inheritable QUERY_LIMITED_INFORMATION |
+   SYNCHRONIZE handle, verify native PID and creation FILETIME, confirm unsignaled
+   state and successful membership in this exact job. An acquisition failure stays
+   fail-closed; the candidate handle is still owned and must be released explicitly.
+2. Keep that same native handle for the verification job lifetime. Check the PID/
+   creation identity of temporary managed Process wrappers before reading memory.
+   Do not replace the retained identity with a new PID lookup after disappearance.
+3. For an established identity, WAIT_OBJECT_0 on its retained handle is authoritative
+   process-exit evidence. Current job membership is not an exit predicate.
+   WAIT_TIMEOUT is unconfirmed; WAIT_FAILED preserves Win32 error; unexpected waits
+   fail. Ownership/identity mismatch fails before the wait. Access denial and native
+   telemetry errors are not silently ignored, even during teardown.
+4. An expected GetProcessById ArgumentException may be accepted only when lookup
+   itself failed and the already-retained owned identity signals exit. No name/PID
+   termination fallback. A process exiting before first identity establishment can
+   still abort verification; accepting it without identity proof is prohibited.
+5. Stop retains identity handles. Dispose/deferred disposal closes admission, uses
+   the existing bounded cleanup allowance to confirm known owned exits and close
+   their handles, and includes unresolved identity ownership in retained cleanup
+   responsibility. Unvalidated candidate handles are closed without declaring them
+   owned children or terminating them. Closure must be confirmed, not inferred from
+   SafeHandle.IsClosed alone. An unconfirmed close retains failure/ownership state.
+6. Metadata locks prevent a handle closing during its native wait. Lock order is
+   recoverySync -> telemetrySync; no telemetry operation acquires recoverySync while
+   holding telemetrySync. No observer lock spans process creation, evidence writes
+   or a termination callback. OS/native stalls remain outside hard guarantees.
+7. Strict teardown still requires settled startup, unchanged inventory generation,
+   resolved recovery handles, retained known exits and final cleanup evidence.
+   Exiting one process is not proof of an empty job, complete capture or sentinel
+   survival. Timeout fixtures must also provide their report and correct exit code.
+8. Snapshots persist PID, creation FILETIME, established ownership, last native wait,
+   error code, timestamp and closure state before forced cleanup when possible.
+   These fields are future diagnostics, not new evidence for historical PID 8264.
+
+The previous failure's immediate telemetry abort is proven, but whether its old
+membership predicate was false or its wait was unsignaled remains UNKNOWN. The
+new contract removes the proven source-level conflation; it is runtime-unverified.
+Existing memory caps, 100ms incomplete-startup budget, independent watchdogs,
+deadlines, PASS assertions and first-error history are preserved. Handles are kept
+until explicit bounded-job disposal; forgetting disposal can retain kernel objects.
+No general-purpose long-running monitor or background recovery is introduced.
+
+Primary Windows references:
+
+- [Process identity lifetime](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/ns-processthreadsapi-process_information): handles retain the process object and its PID until release.
+- [WaitForSingleObject](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject): wait results and the prohibition on closing a handle during a wait.
+- [IsProcessInJob](https://learn.microsoft.com/en-us/windows/win32/api/jobapi/nf-jobapi-isprocessinjob): current running membership query, distinct from exit evidence.
+- [GetProcessTimes](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocesstimes): native creation FILETIME identity metadata.
+
 **Current decision: runtime HOLD.** Do not run the command below. See
 [accepted harmless verification result](SUPERVISOR-VERIFICATION.md): nine groups
 passed in **5.9546453s** and Tech Lead accepted the executed scenarios; previous
