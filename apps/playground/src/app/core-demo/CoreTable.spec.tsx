@@ -31,79 +31,42 @@ const geometry = createGridGeometry({
 
 describe('CoreTable semantics (jsdom only, no browser layout or AT claim)', () => {
   it.each(['ltr', 'rtl'])(
-    'keeps one owner per boundary and internal dividers under a %s page',
+    'keeps only region separator owners under a %s host before and after scrolling',
     (direction) => {
-      const viewport = { width: 120, height: 10 };
-      const initial = calculateGridWindow(geometry, {
-        ...viewport,
-        scrollTop: 0,
-        scrollLeft: 0,
-      });
-      const view = render(
+      const viewport = { width: 115, height: 10 };
+      const windowAt = (scrollLeft: number) =>
+        calculateGridWindow(geometry, {
+          ...viewport,
+          scrollTop: 0,
+          scrollLeft,
+        });
+      const table = (scrollLeft: number) => (
         <div dir={direction}>
           <CoreTable
             geometry={geometry}
-            window={initial}
+            window={windowAt(scrollLeft)}
             viewport={viewport}
             source={source}
           />
-        </div>,
+        </div>
       );
-      expect(view.getByRole('table').getAttribute('dir')).toBe('ltr');
-      expect(
-        view.container.querySelectorAll(`.${styles['leftBoundary']}`),
-      ).toHaveLength(2);
-      expect(
-        view.container.querySelectorAll(`.${styles['rightBoundary']}`),
-      ).toHaveLength(2);
-      for (const row of view.getAllByRole('row')) {
+      const view = render(table(0));
+      for (const scrollLeft of [0, 0.5, 29.5, 60]) {
+        view.rerender(table(scrollLeft));
+        expect(view.getByRole('table').getAttribute('dir')).toBe('ltr');
         expect(
-          row
-            .querySelector('[data-column-id="c2"]')
-            ?.getAttribute('data-trailing-border'),
-        ).toBe('suppressed');
+          view.container.querySelectorAll('.' + styles['leftBoundary']),
+        ).toHaveLength(2);
         expect(
-          row
-            .querySelector('[data-column-id="c3"]')
-            ?.getAttribute('data-trailing-border'),
-        ).toBe('suppressed');
+          view.container.querySelectorAll('.' + styles['rightBoundary']),
+        ).toHaveLength(2);
         expect(
-          row
-            .querySelector('[data-column-id="c1"]')
-            ?.getAttribute('data-trailing-border'),
+          view.container.querySelector('[data-trailing-border]'),
         ).toBeNull();
-      }
-      const next = calculateGridWindow(geometry, {
-        ...viewport,
-        scrollTop: 0,
-        scrollLeft: 29.5,
-      });
-      view.rerender(
-        <div dir={direction}>
-          <CoreTable
-            geometry={geometry}
-            window={next}
-            viewport={viewport}
-            source={source}
-          />
-        </div>,
-      );
-      for (const row of view.getAllByRole('row')) {
-        expect(
-          row
-            .querySelector('[data-column-id="c1"]')
-            ?.getAttribute('data-trailing-border'),
-        ).toBe('suppressed');
-        expect(
-          row
-            .querySelector('[data-column-id="c4"]')
-            ?.getAttribute('data-trailing-border'),
-        ).toBe('suppressed');
-        expect(
-          row
-            .querySelector('[data-column-id="c3"]')
-            ?.getAttribute('data-trailing-border'),
-        ).toBeNull();
+        for (const cell of view.container.querySelectorAll('[aria-colindex]')) {
+          expect(cell.classList.contains(styles['leftBoundary'])).toBe(false);
+          expect(cell.classList.contains(styles['rightBoundary'])).toBe(false);
+        }
       }
     },
   );

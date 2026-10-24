@@ -6,7 +6,7 @@ import type {
   RowSource,
 } from '@org/grid-core';
 import styles from './CoreDemo.module.scss';
-import { getPinnedBoundary, suppressTrailingBorder } from './pinned-boundaries';
+import { getPinnedBoundary } from './pinned-boundaries';
 
 const REGIONS: readonly ColumnRegion[] = ['left', 'center', 'right'];
 
@@ -114,11 +114,6 @@ export default function CoreTable<T>({
                   key={column.id}
                   data-column-id={column.id}
                   data-region={region}
-                  data-trailing-border={
-                    suppressTrailingBorder(region, column, window)
-                      ? 'suppressed'
-                      : undefined
-                  }
                   className={styles['header']}
                   style={{
                     left:
@@ -171,11 +166,6 @@ export default function CoreTable<T>({
                       key={column.id}
                       data-column-id={column.id}
                       data-region={region}
-                      data-trailing-border={
-                        suppressTrailingBorder(region, column, window)
-                          ? 'suppressed'
-                          : undefined
-                      }
                       className={styles['cell']}
                       style={{
                         left:

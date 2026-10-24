@@ -21,6 +21,19 @@ function rule(selector: string): string {
 }
 
 describe('compiled inspection styles (not browser hit-testing/paint evidence)', () => {
+  it('vertically centers body and header text without changing horizontal alignment or fixed geometry', () => {
+    for (const selector of ['.cell', '.header']) {
+      const style = rule(selector);
+      expect(style).toContain('display: flex');
+      expect(style).toContain('align-items: center');
+      expect(style).toContain('box-sizing: border-box');
+      expect(style).toContain('padding: 6px 8px');
+      expect(style).not.toMatch(
+        /justify-content:\s*center|line-height:|transform:/,
+      );
+    }
+  });
+
   it('keeps the viewport sticky and hit-testable in the native scroll container', () => {
     const table = rule('.table');
     expect(table).toContain('position: sticky');
@@ -47,7 +60,7 @@ describe('compiled inspection styles (not browser hit-testing/paint evidence)', 
     expect(rule('.region')).toContain('overflow: clip');
   });
 
-  it('isolates both pinned surfaces and keeps normal internal borders with a color-only edge override', () => {
+  it('isolates pinned surfaces and reserves visible vertical rules exclusively for region separators', () => {
     expect(rule('.leftBoundary::after')).toContain('inset-inline-end: 0');
     expect(rule('.leftBoundary::after')).toContain('width: 1px');
     expect(rule('.leftBoundary::after')).toContain('pointer-events: none');
@@ -56,14 +69,20 @@ describe('compiled inspection styles (not browser hit-testing/paint evidence)', 
     expect(region).toContain('z-index: 0');
     expect(region).toContain('var(--core-surface, var(--core-cell, #fff))');
     expect(rule('.pinnedRegion')).toContain('z-index: 1');
-    expect(rule('.cell')).toContain(
-      'border-inline-end: 1px solid var(--core-border, #ccd4df)',
-    );
+    expect(rule('.cell')).toContain('border-inline-end: 1px solid transparent');
     expect(rule('.header')).toContain(
-      'border-inline-end: 1px solid var(--core-border, #ccd4df)',
+      'border-inline-end: 1px solid transparent',
     );
-    const suppressed = rule('.cell[data-trailing-border=suppressed]');
-    expect(suppressed).toContain('border-inline-end-color: transparent');
-    expect(suppressed).not.toMatch(/border(?:-inline-end)?(?:-width)?:/);
+    for (const selector of ['.cell', '.header']) {
+      expect(rule(selector)).toContain(
+        'border-bottom: 1px solid var(--core-border, #ccd4df)',
+      );
+      expect(rule(selector)).not.toMatch(
+        /border-inline-end-color:|border-right:/,
+      );
+    }
+    expect(rule('.stage')).toContain(
+      'border: 1px solid var(--core-border, #8797ad)',
+    );
   });
 });

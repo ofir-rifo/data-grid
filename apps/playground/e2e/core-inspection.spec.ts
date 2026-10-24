@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test';
 
 // Execution requires a separately authorized, bounded browser/server session.
-test('both pinned edges suppress coincident center borders while preserving internal dividers', async ({
+test('only pinned regions draw vertical dividers while cell and header content is centered', async ({
   page,
 }) => {
   await page.goto('/?demo=core');
@@ -34,17 +34,13 @@ test('both pinned edges suppress coincident center borders while preserving inte
       element.scrollLeft = left;
     }, 200 - width);
     const edgeCell = page.locator('[aria-rowindex="1"] [data-column-id="c2"]');
-    await expect(edgeCell).toHaveAttribute(
-      'data-trailing-border',
-      'suppressed',
-    );
     await expect(edgeCell).toHaveCSS(
       'border-inline-end-color',
       'rgba(0, 0, 0, 0)',
     );
     await expect(
       page.locator('[aria-rowindex="1"] [data-column-id="c1"]'),
-    ).toHaveCSS('border-inline-end-color', 'rgb(72, 82, 92)');
+    ).toHaveCSS('border-inline-end-color', 'rgba(0, 0, 0, 0)');
     const sides = await scrollport.evaluate((element) =>
       Array.from(
         element.querySelectorAll<HTMLElement>(
@@ -102,6 +98,20 @@ test('both pinned edges suppress coincident center borders while preserving inte
   await expect(page.locator('[data-trailing-border="suppressed"]')).toHaveCount(
     0,
   );
+  await expect(
+    page.locator('[aria-rowindex="1"] [data-column-id="c1"]'),
+  ).toHaveCSS('border-inline-end-color', 'rgba(0, 0, 0, 0)');
+  for (const role of ['cell', 'columnheader'] as const) {
+    await expect(page.getByRole(role).first()).toHaveCSS(
+      'border-bottom-color',
+      'rgb(72, 82, 92)',
+    );
+    await expect(page.getByRole(role).first()).toHaveCSS('display', 'flex');
+    await expect(page.getByRole(role).first()).toHaveCSS(
+      'align-items',
+      'center',
+    );
+  }
 });
 
 test('inspection hit targets, themed pinned separator and native scrolling remain aligned', async ({

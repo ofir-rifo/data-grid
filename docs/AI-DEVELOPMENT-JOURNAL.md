@@ -1,5 +1,32 @@
 # AI development journal
 
+## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
+
+NOT MERGE READY. The user's second reference explicitly requires visible vertical
+rules only at pinned boundaries. This supersedes the earlier ordinary internal
+vertical-divider contract. Cells and headers now reserve transparent trailing
+borders, retaining width/padding and content-box geometry. Horizontal row rules
+and the stage frame remain visible. Removed per-cell suppression attributes and
+the now-unnecessary paint helper; pure owner selection, clipping/opaque surfaces
+and stacking stay. Body and headers share flex vertical centering with horizontal
+start alignment. Core, identity, ARIA and native scroll/hit testing are unchanged.
+
+The initial screenshot showed a center divider outside the one-pixel seam band.
+An intermediate clipped-adjacency design passed 69 tests before the user clarified
+that ordinary vertical borders should be absent. It was simplified before commit.
+Final checks: 65 Playground tests, 11 Core tests, both typechecks, 9 policy tests
+and standards PASS (0 errors/9 existing warnings). Replaced only obsolete per-cell
+suppression expectations with unconditional transparent vertical-border checks;
+retained owner, fractional-scroll, hit-testing, identity and ARIA regressions.
+No executed check failed. Browser source updated/typechecked but NOT RUN.
+No local browser/build/server, benchmark/performance or supervisor execution.
+PR #4's current task explicitly prohibits native verification; other worktrees
+and dependencies untouched. Final SHA, remote checks and canonical description
+outcome are in delivery artifacts. User screenshots are pre-fix evidence, not
+proof of corrected pixels. Actual glyph alignment, native scroll/Picker/AT and
+independent browser/review acceptance remain missing. Keep PR #5 Draft/unmerged.
+Performance HOLD. Production POC NO-GO. Earlier sections are historical.
+
 ## 2026-10-24 — PR #5 single-owner seams and authorized main integration
 
 The latest request authorizes resolving main integration. Integrated `4f207d1`

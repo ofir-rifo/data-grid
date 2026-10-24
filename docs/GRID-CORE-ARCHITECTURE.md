@@ -51,17 +51,18 @@ scroll canvas. Restoring pointer hit testing on a sibling overlay alone would
 leave cell input without a scrollport ancestor; native scrolling is preserved by
 DOM ownership instead of introducing synthetic wheel forwarding. The canvas no
 longer has aria-hidden, since it now owns the semantic table. Geometry and Core
-are unchanged. Region pseudo-elements own the inner pinned boundaries; cell
-borders whose one-pixel intervals touch those reserved boundary bands are made
-transparent. Clipping alone was insufficient: a center border could remain just
-inside its clip edge next to the pinned separator. Both regions now have opaque
-theme surfaces and isolated stacking, with center below pins. Internal dividers
-outside the boundary bands remain visible; no padding/width changes or extra DOM.
-When pins meet without center space, the right region alone owns the shared seam.
-The pure renderer helper uses numeric viewport intervals, stays outside Core and
-handles fractional scrolling without exact-equality or column-ID special cases.
-LTR is explicit on both table and canvas under either surrounding text direction;
-native RTL grid geometry is still deferred, not inferred from page-direction tests.
+are unchanged. Region pseudo-elements exclusively own visible vertical rules at
+pinned boundaries. All body/header trailing borders are transparent, retaining
+their width and content-box geometry; horizontal row rules and stage frame remain.
+The user's clarified reference supersedes the earlier internal vertical-divider
+contract and makes scroll-dependent border suppression unnecessary. No per-cell
+paint attributes or suppression algorithm. Regions retain opaque theme surfaces,
+isolated stacking and clipping. Touching pins have one seam owner; zero-width and
+full-viewport pins have none. The pure owner helper stays outside Core.
+Cells and headers share flex vertical centering and horizontal start alignment,
+without extra content wrappers or geometry changes. Fixed top padding alone did
+not center content as row height changed. Explicit LTR table/canvas remains
+stable under either surrounding text direction; native RTL geometry is deferred.
 Static/Sass/jsdom regressions pass; actual sticky layout, native scrolling, Chrome
 Element Picker and visual theme behavior require separately authorized browser
 verification before merge acceptance.

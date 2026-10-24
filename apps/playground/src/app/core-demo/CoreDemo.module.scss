@@ -79,19 +79,16 @@
 .cell,
 .header {
   position: absolute;
+  display: flex;
+  align-items: center;
   box-sizing: border-box;
   overflow: clip;
   padding: 6px 8px;
-  border-inline-end: 1px solid var(--core-border, #ccd4df);
+  border-inline-end: 1px solid transparent;
   border-bottom: 1px solid var(--core-border, #ccd4df);
   background: var(--core-cell, #fff);
   white-space: nowrap;
   font-size: 13px;
-}
-
-.cell[data-trailing-border='suppressed'],
-.header[data-trailing-border='suppressed'] {
-  border-inline-end-color: transparent;
 }
 
 .header {

@@ -1,7 +1,7 @@
 import { calculateGridWindow, createGridGeometry } from '@org/grid-core';
 import type { ColumnDefinition } from '@org/grid-core';
 import { describe, expect, it } from 'vitest';
-import { getPinnedBoundary, suppressTrailingBorder } from './pinned-boundaries';
+import { getPinnedBoundary } from './pinned-boundaries';
 
 const columns: readonly ColumnDefinition<number>[] = Array.from(
   { length: 6 },
@@ -35,9 +35,6 @@ describe('pinned boundary paint ownership (pure renderer geometry)', () => {
     expect(touching.regions.center.width).toBe(0);
     expect(getPinnedBoundary('left', touching)).toBeUndefined();
     expect(getPinnedBoundary('right', touching)).toBe('start');
-    expect(
-      suppressTrailingBorder('left', geometry.regions.left[0], touching),
-    ).toBe(true);
   });
 
   it('omits separators for empty pins, zero viewport and a pin filling the viewport', () => {
@@ -64,11 +61,6 @@ describe('pinned boundary paint ownership (pure renderer geometry)', () => {
     });
     expect(getPinnedBoundary('left', window)).toBeUndefined();
     expect(getPinnedBoundary('right', window)).toBeUndefined();
-    expect(
-      plain.regions.center.every(
-        (column) => !suppressTrailingBorder('center', column, window),
-      ),
-    ).toBe(true);
     const rightOnly = createGridGeometry({
       rowCount: 1,
       rowHeight: 10,
@@ -87,54 +79,18 @@ describe('pinned boundary paint ownership (pure renderer geometry)', () => {
     ).toBeUndefined();
   });
 
-  it.each([
-    { scrollLeft: 0, suppressed: ['c3'] },
-    { scrollLeft: 0.25, suppressed: ['c3'] },
-    { scrollLeft: 0.5, suppressed: ['c3'] },
-    { scrollLeft: 1, suppressed: [] },
-    { scrollLeft: 19, suppressed: ['c1'] },
-    { scrollLeft: 19.5, suppressed: ['c1', 'c4'] },
-    { scrollLeft: 20, suppressed: ['c4'] },
-  ])(
-    'suppresses only reserved-band borders at scroll $scrollLeft',
-    ({ scrollLeft, suppressed }) => {
+  it.each([0, 0.25, 0.5, 1, 19, 19.5, 20])(
+    'keeps region-owned separators stable at fractional scroll %s',
+    (scrollLeft) => {
       const window = calculateGridWindow(geometry, {
         width: 100,
         height: 10,
         scrollTop: 0,
         scrollLeft,
       });
-      expect(
-        geometry.regions.center
-          .filter((column) => suppressTrailingBorder('center', column, window))
-          .map((column) => column.id),
-      ).toEqual(suppressed);
+      expect(getPinnedBoundary('left', window)).toBe('end');
+      expect(getPinnedBoundary('center', window)).toBeUndefined();
+      expect(getPinnedBoundary('right', window)).toBe('start');
     },
   );
-
-  it('retains internal borders within multi-column pinned regions', () => {
-    const multi = createGridGeometry({
-      rowCount: 1,
-      rowHeight: 10,
-      columns: columns.map((column, index) => ({
-        ...column,
-        pinned: index < 2 ? 'left' : index === 5 ? 'right' : undefined,
-      })),
-    });
-    const window = calculateGridWindow(multi, {
-      width: 100,
-      height: 10,
-      scrollTop: 0,
-      scrollLeft: 0,
-    });
-    expect(suppressTrailingBorder('left', multi.regions.left[0], window)).toBe(
-      false,
-    );
-    expect(suppressTrailingBorder('left', multi.regions.left[1], window)).toBe(
-      true,
-    );
-    expect(
-      suppressTrailingBorder('right', multi.regions.right[0], window),
-    ).toBe(false);
-  });
 });

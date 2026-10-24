@@ -127,6 +127,13 @@ the existing logical/physical mapping. The canvas must not hide its table from
 the accessibility tree. Chrome Element Picker behavior requires browser evidence;
 static removal of hit-test exclusion alone is not a browser acceptance result.
 
+Body cells and headers vertically center their single-line content in the
+available row content box, using the same flex alignment rule. Horizontal
+alignment remains at inline start. Symmetric padding, fixed border-box dimensions,
+clipping, roles and pointer hit testing remain unchanged; no row-height-dependent
+line-height or extra content wrappers. Compiled-SCSS regressions cover both
+selectors; actual glyph placement still requires browser acceptance.
+
 A pinned region owns its applicable inner boundary in both header and body rows:
 left pinning draws at its trailing edge and right pinning at its leading edge.
 Each separator is one CSS pixel. If the center collapses and visible pins meet,
@@ -137,22 +144,20 @@ CSS positioning within the explicit LTR coordinate canvas. The separator uses
 color. It overlays content without changing column widths/offsets, is clipped to
 the region and cannot intercept pointer events.
 
-Cells retain their one-pixel trailing internal borders. The renderer suppresses
-the complete cell border when its pixel interval intersects a reserved boundary
-band, rather than painting another separator. For the center, reserve its first
-pixel when a left pin is visible and its last pixel when a right pin is visible.
-For the left pinned region reserve its last pixel (including a clipped viewport
-edge); for the right reserve its first pixel only when it owns an inner seam.
-The test is interval overlap, not equality with a column index or rounded scroll
-position; fractional offsets and partially clipped borders are covered. Internal
-borders outside those one-pixel bands remain unchanged. Suppression changes only
-border color to transparent, retaining border width, padding and column geometry.
+Visible vertical rules belong only to pinned-region separators, in both body and
+headers, following the user's clarified reference. All ordinary cells (including
+internal pinned columns) have transparent one-pixel trailing borders. Retain the
+existing border width to preserve content-box dimensions and horizontal padding;
+keep visible horizontal row rules and the stage frame. No center-column divider
+can bleed through or leave a bordered sliver, at any fractional offset. There is
+no per-column border suppression attribute or scroll-dependent paint helper.
+This supersedes the earlier internal vertical-divider/overlap-band contract.
 
 Each region clips its own children, establishes an isolated stacking context and
 has an opaque themed backing surface. Center content stacks below pinned
 regions. `--core-surface` supplies that backing, falling back to `--core-cell` then
 white; themes must provide an opaque surface (even if cell fills are translucent).
-No new DOM layer or broad removal of internal dividers. This prevents a center
+No new DOM layer; horizontal row dividers remain. This prevents a center
 cell border/background from becoming a second pinned-edge owner. The table
 itself declares LTR as well as the scroll canvas, so the contract also holds when
 embedded in an RTL page. Logical start/end CSS keeps the edge rules directional;
@@ -180,11 +185,11 @@ restrictions as an additional boundary check.
 Separator/hit-testing acceptance: bounded DOM unit tests assert native scroll
 ancestry, accessible table ownership, matching header/body boundary classes,
 zero-width/unpinned omission, and uncancelled pointer/wheel event propagation.
-Pure renderer regression cases cover both boundary owners, collapsed-center
-shared seams, full-viewport pinning, fractional border-band intersections and
-internal dividers that must remain. DOM cases inspect both header/cell border
-suppression under LTR/RTL hosts, before/after horizontal window changes.
-Compiled-SCSS contract tests check sticky offsets, hit testing, themed separator
+Pure renderer cases cover boundary owners, fractional scrolling, empty pins,
+collapsed-center shared seams and full-viewport pinning. DOM cases inspect owner
+counts under LTR/RTL hosts before/after horizontal window changes. Compiled-SCSS
+cases verify transparent vertical cell/header borders, visible row rules and frame,
+and consistent vertical content centering. Compiled-SCSS contract tests check sticky offsets, hit testing, themed separator
 positioning, surface/stacking/clipping, and no geometry-changing border. Separately authorized browser tests
 must check actual hit targets, native scrolling over cells, pinned alignment and
 separator style/placement before/after scrolling, with theme overrides and an
