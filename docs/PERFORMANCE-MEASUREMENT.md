@@ -1,5 +1,22 @@
 # Controlled virtualization measurement plan
 
+Latest accepted runtime evidence: [harmless supervisor verification](SUPERVISOR-VERIFICATION.md)
+passed nine groups in **5.9546453s**, including synthetic exit-race decision checks,
+and was accepted by Tech Lead for the executed scenarios. Earlier failures remain
+historical records. Performance execution remains explicitly disabled; production remains
+NO-GO. No Stage 0/build/browser/performance measurement has run in this workstream.
+Three cases remain NOT VERIFIED: actual native exit-confirmation fallback execution,
+full 30s outer-deadline expiration, and capture overflow/nonempty fixture stderr.
+No performance or hardware-stability conclusion follows from the canary pass.
+
+Historical 2026-10-18 local amendment: Tech Lead approved the conditional Windows protocol
+in [LOCAL-PERFORMANCE-PROTOCOL.md](LOCAL-PERFORMANCE-PROTOCOL.md), ending execution
+at Stage 2. The first launch was blocked by PowerShell execution policy before
+preflight; no performance workload ran. See project status and the AI journal.
+That execution authorization is now suspended by the current HOLD. The older
+hosted-only restriction below is historical for its proposal; neither passage
+authorizes a new workload or Stages 3–4.
+
 Status: prepared on 2026-10-17; **not executed**. Nothing in this procedure authorizes running it. Recent user-reported memory-related BSODs make bounded execution approval a prerequisite.
 
 PR #3 audit (2026-10-18): current correctness/evidence classification and the

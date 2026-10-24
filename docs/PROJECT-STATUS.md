@@ -1,5 +1,78 @@
 # DataGrid project status
 
+## Latest PR #4 work — retained identity correction, STATIC ONLY (2026-10-24)
+
+Historical native false predicate remains UNKNOWN: old confirmation could return
+false for current nonmembership or an unsignaled wait, and neither value was saved.
+The membership/exit conflation is a proven source defect. Implemented a read-only
+native identity registry: establish PID/creation time and ownership while live,
+retain the handle, and confirm exit independently of current membership. Identity
+mismatch, missing prior ownership, native errors and incomplete cleanup fail closed.
+Strict teardown, error history, memory limits and watchdog deadlines are preserved.
+Explicit disposal owns bounded identity-handle release; snapshots include proof data.
+
+Pure deterministic cases were added but NOT EXECUTED. C# compilation passed; no
+runtime verification, canaries, Nx performance target, build/browser/benchmark ran.
+The latest runtime result remains the failure below, teardownVerified=false; final
+sentinel scenario not run. See [supervisor review](SUPERVISOR-VERIFICATION.md) and
+[identity protocol specification](LOCAL-PERFORMANCE-PROTOCOL.md) for exact chronology,
+contract, static evidence and limitations. No success is inferred for this patch.
+
+Independent Tech Lead static review is next; any runtime/publication needs separate
+approval. Performance HOLD; production POC NO-GO. No commit/push/PR update/merge or
+PR5/PR6 modifications. Pre-existing unrelated .gitignore edit and untracked local
+runner preserved; both excluded from the PR4-scoped review patch.
+
+## Current PR #4 decision — 2026-10-24: BLOCKED after authorized verification
+
+One harmless batch executed, exit 1, launcher elapsed 5755.5713ms (Nx 5.8s).
+Seven groups passed, including new synthetic lifecycle/error-history/live-telemetry
+regressions; launcher-timeout failed; final sentinel scenario incomplete-not-run.
+Parent watchdog aborted after GetProcessById reported PID 8264 no longer running;
+the exit-confirmation probe returned false. An exit/membership race is likely, but
+which native confirmation condition failed is UNKNOWN. No retries or implementation
+edits after failure. Full results and command: [verification](SUPERVISOR-VERIFICATION.md).
+
+Parent evidence confirms timeout cleanup and sentinel survival before forced cleanup,
+but expected timeout proof and overall teardownVerified remain false. All 34 recorded
+PIDs were absent in supplementary post-run checks. Recorded scoped peak owned memory
+546463744 bytes, minimum available RAM 18554380288 bytes; no reported instability.
+These are not hardware stability or performance results. Evidence directory:
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-24T07-54-06-308Z-verify`.
+
+Pre-run static audit additionally required unexpected guard-abort/cleanup-error
+rejection and explicit capture-owner disposal; C#/JS/PowerShell/whitespace checks
+passed. The following earlier static-only entry is historical preparation, not the
+current runtime result. Three historical NOT VERIFIED cases remain, plus incomplete
+final scenario and native failure/concurrency evidence gaps. PR #4 stays draft at
+6f1ea82; old published-head CI/Conventions succeeded, not the pending local edits.
+No commit/push/PR update permitted because verification failed. Next: Tech Lead
+reviews failure evidence and authorizes any further correction/verification scope.
+Performance HOLD; production POC NO-GO; default-off flushSync preserved. No Stage 0,
+build/browser/benchmark/dependency/policy/product changes. Local runner unchanged,
+untracked and excluded.
+
+## Latest safety-tooling update — 2026-10-24 (static only)
+
+Separated watchdog live telemetry from strict teardown certification to address
+the startup/preflight conflict. Live member memory sampling continues during
+startup, but coverage is explicitly incomplete until stable, settled observations.
+A non-resetting 100ms budget from first incomplete observation fails closed; all
+existing resource thresholds and independent deadlines remain. Suspended processes
+not yet assigned to the job have a documented temporary monitoring/accounting gap;
+this is not claimed as complete coverage or hardware safety. Strict Pids teardown
+checks, native ownership, history and PASS assertions are preserved. Details and
+call-site/interleaving audit: [verification record](SUPERVISOR-VERIFICATION.md).
+
+Added unexecuted deterministic cases for startup/generation transitions, incomplete
+coverage deadlines, telemetry failure propagation, recovery ownership and scheduled
+Stop/startup. C# compilation with warnings as errors passed without invoking code;
+no runtime verification or workloads ran. Historical PASS results do not validate
+this correction. Three historical NOT VERIFIED cases remain explicit. Next step:
+independent static patch review, then separately authorized harmless verification.
+Performance HOLD; production POC NO-GO. No application/dependency/policy changes;
+default-off flushSync preserved; local-runner.mjs unchanged and excluded.
+
 Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase
@@ -758,6 +831,268 @@ budgets and supervised hosted timing first, then separate native-display and mem
 scaling stages. No benchmark workflow is provisioned/dispatched now. Only after all
 required gates have supporting evidence and a reviewed exit decision may GRID-V1's
 proposed foundation be approved. Do not merge PR #3 or start production code here.
+
+## Windows local experiment — 2026-10-18, performance HOLD
+
+**2026-10-24: error-history gap corrected; final independent static review pending.**
+CompleteStartup and FinishTeardown record full error lists; a reference-identity
+set prevents recording the same exception instance twice. Stop/Dispose/explicit
+completion, admission rejection and late startup cleanup use the same ledger.
+Distinct matching-text failures remain separate. Recording does not alter cleanup
+confirmation; later successful release retains earlier failures. Added unexecuted
+original/secondary preservation and identity-dedup assertions, including the public
+TeardownFailures snapshot after deferred cleanup. Compilation with warnings as
+errors/whitespace PASS; source-path self-review completed; no runtime methods ran.
+Updated two sources and three docs; complete three-source patch against PR #4 HEAD
+exported. No limits/deadlines/watchdog changes, commit/push/PR update/merge.
+Performance **HOLD**, production **NO-GO**. Earlier PASS does not validate this source.
+
+**2026-10-24: deferred disposal handoff implemented; independent static review next.**
+After interrupted startup settles, the last startup or current serialized teardown
+owner performs one synchronous bounded cleanup attempt. Failed proof retains the
+owner, leaves confirmation false and exposes CleanupOwner through the exception.
+CompletePendingDisposal provides an explicit later attempt, with no retry worker.
+Assigned native handles remain available for independent exit confirmation even
+if startup's managed wrapper was disposed. Deferred confirmation requires native
+exits, an empty job and successful handle release, under a shared 1000ms wait/poll
+allowance; existing outer deadlines/resources remain. TeardownFailures preserves
+earlier errors after later success. Passive roots do not guarantee termination or
+reap incomplete readers. See [full lifecycle/interleaving review](SUPERVISOR-VERIFICATION.md).
+Added unexecuted deterministic multi-start/busy-owner/failure/explicit-completion
+cases. C# compilation with warnings as errors and whitespace PASS; no tooling
+methods ran. Manual static analysis/self-review completed; no runtime assurance.
+Three sources and three required documents modified; complete patch exported for
+review. No commit/push/PR change. Performance **HOLD**, production **NO-GO**.
+
+**2026-10-24: targeted concurrency correction; static-only, not runtime verified.**
+Both startup paths now settle explicit lifecycle reservations in outer finally,
+including creation failure. Stop/Dispose close admission and reject active startup
+as unconfirmed teardown; Dispose retains its job until startup settles. Recovery
+does not close handles still owned by active startup. Pids has no active-start
+exemption and rechecks startup generation after native enumeration. Conservative
+telemetry rejection during startup may abort a future batch; no compatibility
+claim is made. Added unexecuted deterministic creation-failure/lifecycle/interleaving
+cases to the synthetic group. C# compilation-only/whitespace PASS; no workloads.
+Passive retention registries do not retry, guarantee termination or survive process
+exit; see [details](SUPERVISOR-VERIFICATION.md). Three tooling files plus three
+evidence documents modified. No commit/push. Performance **HOLD** / POC **NO-GO**.
+
+**2026-10-24: PR #4 safety remediations implemented; static checks only.**
+Native startup now reserves recovery ownership before creation and retains unresolved
+process/thread handles; inventory cannot certify teardown while recovery is pending.
+Independent waits run even after termination failure and preserve native codes.
+Capture owners survive exceptional returns; reader startup follows construction,
+and untransferred pipe wrappers dispose deterministically. Incomplete bounded
+cleanup retains explicit supervisor-lifetime owners and fails closed, rather than
+dropping recovery handles or claiming successful teardown. See
+[remediation details/risks](SUPERVISOR-VERIFICATION.md). Compilation-only/whitespace
+PASS; no runtime verification. Earlier nine-group PASS covers the committed source,
+not this revision. Two tooling files and three evidence documents changed; no
+commit/push/merge. local-runner untouched. Performance **HOLD**, production **NO-GO**.
+
+**Current decision: supervisor verification accepted for executed scenarios; PR #4
+review preparation only.** Proposed 15-file scope excludes untouched/untracked
+local-runner.mjs and all production code, dependencies, lockfiles and CI workflows.
+Eight executable sources match accepted-run hashes. No new runtime checks ran for
+this review. Commits, push and PR creation are not yet authorized. Performance
+**HOLD** / production **NO-GO**. Historical snapshots below describe earlier states;
+the accepted result and its three NOT VERIFIED cases are the current evidence.
+
+**Latest execution: one authorized harmless batch PASS for tested scenarios.**
+Exit 0; launcher 5954.6453ms, Nx 6.0s; no retries, code or threshold changes.
+All nine groups passed, including new synthetic exit-race decision assertions,
+timeout report/tree proof, guard cleanup and final sentinel/teardown. Guard abort
+reason null, cleanup errors empty; report present; three retained exits and empty
+job independently confirmed. Captured 1241 stdout/0 stderr bytes, no truncation.
+Sentinel survived, then intentionally stopped in final cleanup; inventory found
+none of 36 recorded PIDs present. Overall teardownVerified true.
+Native fallback branch execution is NOT VERIFIED (no branch counter); full 30s
+expiration and overflow/nonempty stderr also remain NOT VERIFIED. A single pass
+does not establish race elimination, hardware stability or performance readiness.
+Exact command/matrix: [verification record](SUPERVISOR-VERIFICATION.md); artifacts:
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-18T20-18-12-219Z-verify`.
+Only verification/status/journal documents updated; historical failures preserved.
+No Stage 0/build/Chromium/performance, commit/push or PR. Performance **HOLD** /
+production **NO-GO**; stop for Tech Lead review.
+
+**Historical preparation: static-only telemetry race correction.**
+Lookup-stage process disappearance is accepted only when a temporary native handle
+independently confirms membership in the owned job and signaled exit. Unknown exit,
+access denial and failed probes remain fail-closed with original errors retained;
+later PID-list absence alone is insufficient. Applied to both telemetry samplers.
+Added unexecuted focused decision-regression assertions in the synthetic group.
+Existing memory limits, timers/watchdog, termination, ownership and PASS assertions
+unchanged. C# compilation-only/whitespace checks PASS. Native exit/membership behavior
+may still reject the race conservatively; no fixture success is claimed.
+Changed guard-verification.cs and the verification/status/journal documents only.
+[Correction and residual risks](SUPERVISOR-VERIFICATION.md). No runtime execution,
+commit or push. Performance **HOLD**, production **NO-GO**.
+
+**Historical execution: one diagnostic batch FAILED; no retry or code change.**
+Exit 1; launcher 5676.5967ms, Nx 5.8s. Seven groups PASS; launcher-timeout FAIL;
+final sentinel/teardown NOT VERIFIED. New parent evidence identifies independent
+guard termination on `Missing live owned-process telemetry: 7596` after the fixture
+requested termination of that PowerShell child. Likely exiting-process/job-membership
+race; precise transition timing unrecorded. Fixture 13900 exited 1 before its report.
+Before parent-forced cleanup, all three retained processes had exited, job empty,
+sentinel alive, report absent; guard cleanup errors empty. Cleanup true, timeout
+proof and overall teardown false. Inventory: none of 36 recorded PIDs present.
+Full outer-timeout expiration and overflow/nonempty stderr remain NOT VERIFIED.
+Exact command/matrix: [verification record](SUPERVISOR-VERIFICATION.md). Evidence:
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-18T20-11-35-418Z-verify`.
+Only three documentation files updated. Performance **HOLD** / production **NO-GO**;
+next is Tech Lead review of identity-safe telemetry race handling, before any fix/run.
+
+**Historical preparation: diagnostic instrumentation only; statically checked.**
+The surviving parent now persists supervisor guard reason/cleanup errors separately
+from fixture-reported reason, report existence independently of exit code, and
+timestamped retained-process/job/sentinel observations before parent-forced cleanup.
+Fields survive in parent events/final result; observation errors remain failures.
+All PASS assertions, termination behavior, SafeHandle ownership, deadlines and
+limits are preserved. C# compilation-only and whitespace checks PASS; no runtime
+verification or canaries ran. Historical fixture exit-1 cause remains UNKNOWN.
+Changed exactly `tools/performance/guard-verification.cs` and the three status/
+verification/journal documents. No helper, launcher or local-runner changes.
+[Diagnostic fields and blind spots](SUPERVISOR-VERIFICATION.md).
+Performance remains **HOLD**, production **NO-GO**; no new execution authorized.
+
+**Historical result: revised supervisor batch FAILED; stopped for Tech Lead review.**
+Exactly one harmless batch, exit 1, 5427.1608ms launcher (Nx 5.5s), no retries:
+seven groups passed, launcher-timeout failed, final sentinel/teardown NOT VERIFIED.
+Fixture exited 1 after recording a retained-handle stop request; exact exit cause
+is unresolved. Parent preserved 486 stdout/0 stderr bytes and failure diagnostics.
+Timeout cleanup recorded true, but overall `teardownVerified:false` stays unchanged;
+no success inferred. Read-only inventory found none of 36 recorded PIDs present.
+Sentinel survived completed groups; failed-timeout/final sentinel assertion remains
+unverified. Full outer-30s expiration and overflow/nonempty stderr remain NOT VERIFIED.
+Exact command, matrix and evidence:
+[verification record](SUPERVISOR-VERIFICATION.md), artifacts
+`C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-18T19-59-38-243Z-verify`.
+Only the verification record, this status and AI journal changed. No code fix,
+rerun, Stage 0/build/Chromium/performance, dependency/policy change, commit or push.
+Performance remains **HOLD**; production POC **NO-GO**. Await Tech Lead review.
+
+**Historical static hardening before the latest batch.** The
+accepted nine-group canary pass remains historical evidence. Later changes remove
+shell/ComSpec and PID taskkill cleanup, use explicit child-exit state/retained-handle
+termination, bound failure completion with an independent 30s outer failure exit,
+and harden native job/pipe ownership on exceptional construction/close paths.
+These changes have no runtime verification. Measurement/protocol summaries were
+reconciled; original failures preserved. See [current review](SUPERVISOR-VERIFICATION.md).
+Final JS syntax, PowerShell parsing, C# compilation and whitespace checks passed;
+local-runner SHA-256 remained identical and Git still reports it untracked.
+Full 30s expiration and capture overflow/nonempty fixture stderr stay NOT VERIFIED.
+`local-runner.mjs` remains untracked/unmodified and excluded from the 15-file proposed
+PR. Verification has no call path to builds/Chromium/workloads; `perf-local` remains
+disabled. Performance HOLD and production NO-GO remain. No dependency/policy or
+production changes, commits or pushes; next step is static Tech Lead review.
+
+**Earlier implementation result: one authorized harmless supervisor batch PASS; performance
+runtime remains HOLD.** Exit 0, 5.870s launcher elapsed (Nx 6.0s), no retries.
+All nine groups passed, including parent-owned bounded pipe capture, launcher
+timeout proof, nine exact abort reasons, writer failure and final sentinel/teardown.
+Parent evidence confirms three retained handles exited, empty tested job, successful
+capture (1969 stdout bytes / 0 stderr) and surviving sentinel. Top-level
+`teardownVerified:true`; no recorded owned PIDs remained in a later read-only
+inventory (36 checked). Sentinel survived checks then was intentionally cleaned up
+in its separate owned job. Previous failed evidence remains unchanged.
+
+See [full PASS/FAIL/NOT VERIFIED matrix](SUPERVISOR-VERIFICATION.md).
+Evidence: `C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-18T19-39-27-719Z-verify`.
+The 30s outer timer remained armed; its shared timeout implementation was exercised
+at 2s. Full 30s expiration, pipe-cap overflow/nonempty stderr, real OOM/full-disk,
+hardware stability and DataGrid performance remain NOT VERIFIED. No Stage 0/build/
+Chromium/performance workload, production/policy/dependency changes or commits.
+Only the three required evidence documents changed this task. Further performance
+controller work or execution needs separate Tech Lead approval; POC is unvalidated.
+
+Historical diagnostic-only preparation:
+
+**Historical decision: DIAGNOSTIC FIX ONLY; runtime HOLD.** Static lifecycle review
+confirmed that completion/failure reporting depended on the fixture reaching its
+final write while stdout/stderr were discarded. The historical exact runtime
+trigger remains unknown. Added bounded surviving-parent stdout/stderr capture,
+exit/code/signal/termination diagnostics, parent-owned final timeout proof and
+cleanup aggregation. Fixture reports cannot certify PASS; retained-handle exit and
+empty-job proof before forced cleanup are required. JS syntax, PowerShell parsing,
+C# compilation and whitespace checks passed. **No runtime verification ran** and
+the latest failed rerun below remains the actual result. New native pipe/handle
+inheritance behavior is unverified. See [diagnostic review](SUPERVISOR-VERIFICATION.md).
+
+Historical latest runtime result:
+
+**Historical: one separately authorized harmless rerun FAILED; runtime still HOLD.**
+Exit 1 after 5.753s, no retries. Seven groups passed, including all nine exact
+resource/telemetry/phase abort reasons and evidence-write failure handling. The
+first abort reason survives healthy samples, later aborts, cleanup errors and
+disposal. The shared launcher timeout fired under a shortened 2s deadline and its
+termination command reported success, but the fixture exited unsuccessfully before
+saving its result; full launcher-timeout verification therefore failed. Final
+sentinel group was not run. Sentinel survived completed groups; later read-only
+inventory found none of 33 recorded PIDs present. Historical raw summary remains
+`teardownVerified:false`. No Stage 0/build/Chromium or performance work ran.
+See [actual rerun evidence and remaining risks](SUPERVISOR-VERIFICATION.md).
+Evidence: `C:\Users\ofirr\Documents\Codex\datagrid-performance\2026-10-18T19-24-29-973Z-verify`.
+Next: Tech Lead review of the timeout fixture diagnostics before any further
+verification authorization. No automatic retry or code fix followed this failure.
+
+Historical preceding hardening attempt:
+
+Supervisor hardening plus **one harmless verification batch**
+was authorized and executed; see [verification record](SUPERVISOR-VERIFICATION.md).
+The reviewed PowerShell 7 host launched normally. Five groups passed (ownership/
+limits, explicit stop, kill-on-close, supervisor failure and watchdog timeout).
+Synthetic resource testing failed an abort-reason preservation assertion; writer
+failure and final sentinel/teardown groups remain incomplete. Exit 1, 2.585s,
+no retries. A static reason-latch correction compiles but was not rerun.
+Original failure evidence and source hashes are preserved externally; read-only
+post-failure inventory found no recorded canary PIDs present. The raw summary
+remains `teardownVerified:false`; do not promote it to a passing verification.
+
+The non-cached `perf-local-verify` target is separate from performance execution;
+`perf-local` is now explicitly disabled. The hardened supervisor has no Stage 0,
+build or browser route. Old uncommitted measurement work is preserved in source
+and an external snapshot. Runtime remains HOLD; next step is Tech Lead review of
+the correction and authorization for another harmless batch, not performance.
+
+**Historical Tech Lead decision: HOLD runtime execution.** No Stage 0/build/browser
+may run. [Launcher/supervision review](LOCAL-LAUNCHER-REVIEW.md) identifies the
+failed Windows PowerShell 5.1.26100.9711 host (all policy scopes Undefined,
+effective fallback Restricted) and an existing PowerShell 7.6.5 host (LocalMachine
+RemoteSigned, other scopes Undefined). A harmless policy-only script passed normal
+`-File` invocation under the latter; the supervisor and enforcement canaries were
+not executed. No policies/zone metadata/settings changed. This establishes policy
+eligibility only. The review lists safety corrections and a proposed ≤30s canary
+plan required before future runtime approval. Launcher code remains unchanged.
+
+Historical authorization superseded the earlier hosted-only proposal only for a
+controlled local attempt through Stage 2. Source baseline is merged PR #3
+`27b4f16`; tooling branch `codex/local-performance-protocol`. See
+[protocol](LOCAL-PERFORMANCE-PROTOCOL.md) and
+[AI journal](AI-DEVELOPMENT-JOURNAL.md) for constraints, review and failure record.
+
+Implemented isolated Node runner, independent PowerShell/Windows Job Object
+supervisor and non-cached Nx `perf-local` target. Node syntax, PowerShell parsing,
+C# compilation and corrected root-based targeted ESLint passed. Enforcement has
+**not** been runtime validated. Initial lint from playground skipped the file;
+only the corrected invocation is lint evidence.
+
+One `pnpm nx run @org/playground:perf-local --excludeTaskDependencies --skipSync
+--parallel=1` attempt exited 1 before the supervisor body: Windows refused the
+PowerShell script because script execution is disabled. **Stage 0 did
+not run/pass; no build, browser or measurement ran.** No retry/bypass or system
+configuration change was made. This is a launch failure, not a POC/hardware result.
+Evidence is saved externally under `Documents/Codex/datagrid-performance` as a
+timestamped `launch-failure.json`; no measurements or successful-run marker exist.
+
+Read-only follow-up: the invoked `powershell.exe` reports effective `Restricted`,
+while the current tool shell reports LocalMachine `RemoteSigned`. These are
+different host policy observations, not an authorization to bypass either.
+
+Next: Tech Lead reviews a compliant launcher/host route and unverified safety
+enforcement before another attempt. Stage 3 is gated on Stage 2 review and Stage 4
+on separate explicit confirmation after Stage 3. POC remains unvalidated and
+production remains NO-GO pending evidence. Default-off flushSync is preserved.
 
 ## Resume and continue
 
