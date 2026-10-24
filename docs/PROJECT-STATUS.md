@@ -1,5 +1,37 @@
 # DataGrid project status
 
+## Grid Core PR #5 milestone — 2026-10-24
+
+Authorized scope: framework-independent geometry/data foundation and React
+inspection demo, based only on main `27b4f16`. Dedicated worktree:
+`C:\Users\ofirr\Documents\Codex\data-grid-core`, branch `feature/grid-core`.
+No PR #4 code, changes, supervisor tooling or verification evidence imported.
+
+Implemented: strict generic indexed rows, stable IDs, immutable columns,
+fixed-height rows, variable column widths, pure 2D visible/render windows,
+pixel overscan, clamping and left/center/right clipping regions. Setup O(C), scroll
+O(log Ccenter), no row enumeration/cell matrix. See
+[specification](../specs/features/GRID-CORE-V1.md),
+[architecture](GRID-CORE-ARCHITECTURE.md) and [usage/verification](GRID-CORE-REVIEW.md).
+
+React inspection route: `/?demo=core`. Lazy million-row preset and capped physical
+canvas demonstrate coordinate contracts only. Production navigation,
+screen-reader acceptance, accurate large-scroll mapping and runtime performance
+remain unverified. Original POC remains the default route.
+
+2026-10-24 verification: Core unit tests 9 PASS; engineering policy tests 9 PASS;
+Core and full Playground typechecks PASS; standards PASS with 0 errors and 9
+existing warnings. Initial sandbox temporary-file/Git fixture failures were
+resolved by bounded escalated reruns. Browser, dev server, build, benchmarks,
+Stage 0 and supervisor verification NOT RUN. Exact commands: review record.
+
+PR #4 context inspected read-only: its agent completed verification and was idle
+before bounded checks. Its working status records failed launcher-timeout
+verification at draft head `6f1ea82`, pending local changes and incomplete native
+evidence. This is external state, not a dependency or reproduced result. Historical
+content below belongs to main and remains dated. Performance HOLD; production
+POC NO-GO. No POC exit decision is asserted.
+
 Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase

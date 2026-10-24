@@ -1,0 +1,75 @@
+.demo {
+  padding: 20px;
+  color: var(--core-text, #172337);
+  font-family: system-ui, sans-serif;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-block: 16px;
+}
+
+.stage {
+  position: relative;
+  border: 1px solid var(--core-border, #8797ad);
+}
+
+.scrollport {
+  height: 460px;
+  overflow: auto;
+
+  &:focus-visible {
+    outline: 3px solid #245bd6;
+    outline-offset: 2px;
+  }
+}
+
+.table {
+  position: absolute;
+  inset: 0 auto auto 0;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.body {
+  position: absolute;
+  width: 100%;
+  overflow: clip;
+}
+
+.row {
+  position: absolute;
+  width: 100%;
+}
+
+.region {
+  position: absolute;
+  overflow: clip;
+}
+
+.cell,
+.header {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: clip;
+  padding: 6px 8px;
+  border-right: 1px solid var(--core-border, #ccd4df);
+  border-bottom: 1px solid var(--core-border, #ccd4df);
+  background: var(--core-cell, #fff);
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.header {
+  background: var(--core-header, #e7edf6);
+  font-weight: 600;
+}
+
+.debug {
+  display: block;
+  margin-block: 16px;
+  line-height: 1.6;
+  font-family: monospace;
+}

@@ -49,6 +49,8 @@ jobs:
         run: pnpm nx run @org/playground:dead-code-report --excludeTaskDependencies --skipSync --parallel=1
       - name: Unit tests
         run: pnpm run test:playground
+      - name: Grid Core unit tests
+        run: pnpm run test:core
       - name: Verify Vite bundle
         run: pnpm run build:playground
       - name: Install Chromium on runner

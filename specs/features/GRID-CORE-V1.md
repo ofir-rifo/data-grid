@@ -1,0 +1,128 @@
+# Grid Core V1 — framework-independent foundation
+
+Status: implementation authorized by the PR #5 request, 2026-10-24; runtime and
+production acceptance pending. Performance HOLD; production POC NO-GO.
+
+This scope supersedes GRID-V1's former implementation gate only for the pure Core
+foundation and isolated inspection demo. It does not validate POC-V1, authorize
+performance execution, or complete the proposed production grid renderer.
+
+## Scope and public API
+
+`packages/grid-core` is a private Nx TypeScript library. Its public entry point
+exports `RowSource<T>`, `ColumnDefinition<T>`, `ColumnLayout<T>`, `GridGeometry<T>`,
+`GridWindow`, `IndexRange`, `createGridGeometry`, `calculateGridWindow`,
+`getRow`, and `getRowOffset`. No framework, DOM, network or runtime dependencies.
+Consumers supply synchronous indexed rows (`count`, `getRow(index)`,
+`getRowId(row)`) and column definitions (`id`, `header`, `width`, optional `pinned`,
+`getValue(row): unknown`). Values deliberately have no associated Core renderer;
+typed accessors accept T, and formatting stays with the consumer/adapter.
+
+Rows are never enumerated for geometry. Row keys are nonempty unique strings,
+stable across reorder/replacement, supplied by the consumer. `getRow` validates
+the requested index and returned key, but cannot detect global duplicate keys
+without an O(rows) scan, which is explicitly excluded. Column IDs are nonempty
+unique strings, checked at layout creation. Neither row positions nor column
+positions are identities. Column logical indices preserve original input order;
+visual region order is left, center, right, preserving order within each region.
+
+`createGridGeometry({rowCount,rowHeight,columns})` snapshots column metadata and
+accessors, computes offsets within each region, and returns immutable geometry.
+Consumers rebuild geometry after changing counts, height, widths, IDs or pinning.
+Changing row values alone does not require rebuilding geometry. No hidden state,
+listeners, caches or disposal. `getRowOffset(geometry,index)` validates an existing
+row; the exclusive content-end position is `geometry.height`.
+
+## Geometry, virtualization and coordinates
+
+All units are logical CSS pixels; LTR only. Rows have one positive finite height.
+Column widths are positive finite numbers (fractional widths allowed). Counts
+are nonnegative safe integers. Accumulated widths and row extent must be finite
+and <= Number.MAX_SAFE_INTEGER; excessively small positive dimensions whose
+addition fails to advance the cumulative extent are rejected.
+Row height must also be at least height*Number.EPSILON for multiple rows, ensuring
+representable progression at the largest offset. Fractional row boundaries use
+index*rowHeight as authoritative; division rounding must not add phantom rows.
+
+`calculateGridWindow(geometry,{width,height,scrollLeft,scrollTop,rowOverscan?,
+columnOverscan?})` accepts finite nonnegative viewport dimensions and pixel
+overscan (default zero). Scroll offsets must be finite; negatives/overshoot clamp
+to [0,maxScroll]. `scrollLeft` is the center's content offset, `scrollTop` the
+shared row offset. Core never reads a scrollbar or subtracts scrollbar thickness;
+the renderer supplies the measured inner viewport. Pinned widths are reserved
+before center width. If pinned widths exceed the viewport, left clips first to
+viewport width, then right gets the remainder, and center is zero. Core returns
+both full pinned content widths and nonoverlapping region viewport rectangles.
+Pinned columns do not scroll horizontally and are not column-virtualized.
+
+Returned visible and render ranges are half-open [start,end). An item intersects
+[a,b) exactly when item.end > a and item.start < b. Touching a boundary alone is
+not visible. Render ranges expand the visible pixel interval by overscan then
+clamp to content. Zero viewport extent returns [0,0) on that axis regardless of
+overscan. Zero center width produces empty center ranges. Zero width or height
+prevents cells on that axis; independent ranges may still describe the other
+axis. Empty counts return [0,0). Visible ranges exclude overscan. Renderer uses
+one row render range across all regions and original logical indices for ARIA.
+
+`GridWindow` returns clamped scroll offsets, maximum offsets, region rectangles,
+row visible/render ranges, and center-column visible/render ranges. Column
+offsets are relative to their region; viewport cell X is region.x+column.offset
+minus scrollLeft for center only. Row viewport Y is index*rowHeight-scrollTop.
+Total logical height is rowCount*rowHeight; width is sum of all three regions.
+
+## Errors and immutability
+
+Invalid scalar dimensions/counts, invalid runtime pin values, missing/duplicate
+column IDs, unsafe extents, invalid row indices or empty row IDs throw RangeError
+with a field-specific message. Consumer callback exceptions propagate unchanged.
+No callback is invoked during geometry/window calculation. Geometry metadata is
+frozen; row objects remain owned by the consumer and are not cloned/frozen.
+
+## Complexity and alternatives
+
+Setup O(C) time/memory, no row-dependent allocation. Scroll O(log Ccenter) time,
+O(1) allocation (fixed number of result records), no row/cell materialization.
+Binary search over stored region offsets supports unequal column widths.
+Rows use division; uniform-width-only arithmetic was rejected because explicit
+widths are required. Reusing POC implementation directly was rejected because
+it lacks validation, data contracts and explicit edge semantics. Stateful engine,
+prefix tree for interactive resizing, plugins and memoization are deferred until
+requirements justify them. Pinned rendering costs O(renderRows * pinnedColumns);
+consumers must keep pinned counts bounded. The Core cannot promise bounded DOM
+for arbitrarily large viewports, overscan or pinned counts.
+
+## Renderer and accessibility responsibilities
+
+React owns measurement, event subscription/cleanup, scheduling, clipping, DOM,
+styles, keyboard events and focus, headers, formatting and accessibility. Core
+owns logical indices/identity/geometry only. A future production grid must keep
+one logical row across regions, expose total counts and 1-based logical indices,
+preserve focus across virtual lifetimes and implement the approved keyboard model.
+The inspection demo is a read-only ARIA table with keyboard-scrollable viewport,
+not an interactive grid or an accessibility acceptance claim. Region cells share
+one row; headers follow visual region order, with original logical aria-colindex.
+No sorting, filtering, selection, editing, grouping, variable-height rows,
+fetching, full plugin system or production navigation in this milestone.
+
+The million-row preset uses lazy indexed rows and a bounded physical scroll
+canvas with proportional logical offsets. This sacrifices pixel-perfect native
+scroll precision at large logical extents; it is an inspection coordinate mapping,
+not validated production segmentation or evidence of smooth performance.
+
+## Acceptance and test strategy
+
+Deterministic unit tests must cover exact/interior edges, beginning/middle/end,
+overscan/clamping, 0/1 items, zero viewports, unequal/fractional widths, combined
+2D motion, all pin states/overflow, identity across replacement/reorder, invalid
+inputs/callback errors and large logical rows with bounded columns. Compare
+binary-search ranges against an independent interval-intersection oracle over
+small fixtures. Demonstrate no row access during window calculations.
+Core tsconfig has ES2022 only and no ambient browser/framework types. Add import
+restrictions as an additional boundary check.
+
+Demo must expose configurable bounded counts, a million-row preset, both axes,
+pinning, visible/render windows, offsets, dimensions and cell count. Browser tests
+specify bounded correctness and semantics only. No browser, server, benchmark,
+stress, dependency installation or supervisor execution during this task. Run
+bounded Nx checks only after establishing no concurrent native verification and
+safe local tooling; otherwise record NOT RUN with exact follow-up commands.

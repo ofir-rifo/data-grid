@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "test:core": "nx run @org/grid-core:test --excludeTaskDependencies --skipSync --parallel=1",
     "dev": "nx run @org/playground:dev --skipSync",
     "dev:open": "nx run @org/playground:dev --skipSync --args=\"--open\"",
     "build:playground": "nx run @org/playground:build --excludeTaskDependencies --skipSync --parallel=1",

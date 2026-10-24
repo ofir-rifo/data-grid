@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["es2022"],
+    "types": ["node", "vitest"],
+    "outDir": "out-tsc",
+    "tsBuildInfoFile": "out-tsc/tsconfig.spec.tsbuildinfo"
+  },
+  "include": ["src/**/*.spec.ts", "vitest.config.mts"],
+  "references": [{ "path": "./tsconfig.lib.json" }]
+}

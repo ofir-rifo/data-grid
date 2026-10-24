@@ -3,6 +3,7 @@
   "compileOnSave": false,
   "files": [],
   "references": [
+    { "path": "./packages/grid-core" },
     {
       "path": "./apps/playground"
     }
