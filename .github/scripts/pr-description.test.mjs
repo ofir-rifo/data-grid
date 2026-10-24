@@ -78,11 +78,13 @@ test('CLI reads actual event body and fails closed', () => {
 test('workflow static security and trigger contract', () => {
   const workflow = readFileSync(new URL('../workflows/pr-description.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
   assert.match(workflow, /types: \[opened, edited, reopened, synchronize, ready_for_review, converted_to_draft\]/);
-  assert.match(workflow, /permissions:\n  contents: read\n/);
-  assert.match(workflow, /name: PR description\n/);
+  assert.match(workflow, /  pull_request_target:\n    branches: \[main\]/);
+  assert.match(workflow, /permissions:\n  contents: read\n  pull-requests: read\n  statuses: write\n/);
+  assert.match(workflow, /name: Trusted description reporter\n/);
+  assert.match(workflow, /ref: \$\{\{ github.workflow_sha \}\}/);
   assert.match(workflow, /persist-credentials: false/);
-  assert.match(workflow, /run: node \.github\/scripts\/check-pr-description\.mjs/);
-  assert.doesNotMatch(workflow, /pull_request_target|secrets[.[]|write|\bif:|paths:|branches:|pnpm|npm install|github\.event\.pull_request\.body/);
-  assert.equal([...workflow.matchAll(/uses: /g)].length, 2);
-  for (const use of workflow.matchAll(/uses: (.+)/g)) assert.match(use[1], /@[a-f0-9]{40} /);
+  assert.match(workflow, /run: node \.github\/scripts\/report-pr-description\.mjs/);
+  assert.doesNotMatch(workflow, /  pull_request:|secrets[.[]|\bif:|paths:|pnpm|npm install|github\.event\.pull_request\.(?:body|head|base)|refs\/pull/);
+  assert.equal([...workflow.matchAll(/^\s+- uses: /gm)].length, 2);
+  for (const use of workflow.matchAll(/^\s+- uses: (.+)/gm)) assert.match(use[1], /@[a-f0-9]{40} /);
 });

@@ -28,6 +28,7 @@ No dependencies are required. From the repository root:
 
 ```powershell
 node --test --test-concurrency=1 .github/scripts/pr-description.test.mjs
+node --test --test-concurrency=1 .github/scripts/pr-description-reporter.test.mjs
 $env:GITHUB_EVENT_PATH = 'C:/absolute/path/to/event.json'
 node .github/scripts/check-pr-description.mjs
 ```
@@ -36,8 +37,9 @@ The JSON must contain `{"pull_request":{"body":"the actual description"}}`.
 The CLI rejects invalid JSON, missing events and missing/invalid bodies with exit 1.
 It reads neither titles nor comments. Section-specific errors identify headings,
 order, placeholders and status/reason problems. Correct the PR's description via
-GitHub's Edit button; the `edited` event triggers a new run. Rerunning an old event
-can validate an old snapshot, so use a fresh edit when correcting content.
+GitHub's Edit button; after trusted deployment the `edited` event triggers a new
+run. The local CLI validates its supplied snapshot; the hosted reporter re-fetches
+the current description/head so an old event body cannot certify success.
 
 Regenerate the template after intentional policy edits:
 
@@ -52,23 +54,33 @@ in the policy. This is structural/heuristic validation, not language understandi
 
 ## GitHub workflow and security
 
-[pr-description.yml](../.github/workflows/pr-description.yml) runs on opened,
-edited, reopened, synchronize, ready_for_review and converted_to_draft. There are
-no branch, path or draft filters. Job/check name: **PR description**. It tests the
-policy then validates `GITHUB_EVENT_PATH` with Node 24. Permissions are only
-`contents: read`; pinned checkout/setup actions retain no checkout credentials.
-No secrets, writes, PR comments, dependency installation, Nx tasks or builds run.
-Body text is data, never shell interpolation; log strings are JSON escaped.
+[pr-description.yml](../.github/workflows/pr-description.yml) uses
+`pull_request_target` for main-targeting PRs with opened, edited, reopened,
+synchronize, ready_for_review and converted_to_draft. There are no path or draft
+filters. The workflow definition comes from main, and checkout pins this same
+repository at `github.workflow_sha`. PR branches, merge refs, artifacts and code
+are never loaded. A PR deleting or replacing its own workflow/validator does not
+alter this trusted main-selected run after deployment.
 
-Fork PRs receive read-only execution without secrets. GitHub may require maintainer
-approval for outside contributors. Missing payloads fail closed. A PR can change
-its own workflow/validator because `pull_request` uses the merge ref: review these
-changes carefully. This check is not tamper-proof policy enforcement. Merge
-conflicts can prevent pull_request workflows from running and must be resolved.
-Newer events cancel older runs in the same PR concurrency group, but event snapshots
-and check results are commit-associated; simultaneous edits and old manual reruns
-still warrant checking the latest description/run before merge. No merge queue
-support is claimed; adopting one requires a reviewed merge_group design.
+The reporter posts **PR description** as a commit status on the PR's event head
+SHA. The separate native job is **Trusted description reporter**; do not select
+its default-branch job context as the head status. Job permissions are
+`contents: read`, `pull-requests: read`, `statuses: write`. Only the automatic token
+is used; no user secrets or code/settings writes. Pinned checkout/setup actions
+are trusted and checkout does not persist credentials. No cache, install, Nx,
+builds or browsers run. The token is removed from the trusted test subprocess's
+environment. The PR body remains data and diagnostics are JSON escaped.
+
+Pending is posted before bounded trusted test gates. The reporter fetches current
+PR metadata from a fixed API endpoint, validates its body and verifies the snapshot
+again before success. Invalid descriptions post failure; gate/API/stale-head
+errors post error where possible and exit nonzero. Network calls have timeouts and
+reject redirects. Drafts and forks follow the same metadata-only path without
+running contributor code with the token. Event policy or platform restrictions
+can prevent execution; absence is not a passing result. Review the full
+[security report and bootstrap procedure](PR-DESCRIPTION-SECURITY.md) for residual
+status identity, concurrency, SHA reuse and deployment limits. No merge queue
+support or tamper-proof enforcement is claimed.
 
 ## Required check activation — manual, not applied
 
@@ -84,30 +96,27 @@ Public repositories support required checks on GitHub Free; the account's billin
 plan was not inspected. Repository admin metadata does not grant this connector
 administration access. No settings were changed.
 
-After review and merging this policy through the normal protected process:
+The [current activation procedure](PR-DESCRIPTION-SECURITY.md#bootstrap-and-activation)
+supersedes the original merge-ref instructions. Main has no trusted validator yet:
+PR #6 cannot certify its own trusted deployment. Independent bootstrap review and
+existing checks must be satisfied without bypasses before any authorized merge.
+After deployment and adversarial hosted verification, require the head commit
+status **PR description** with its observed GitHub Actions source, preserving all
+existing rules. CODEOWNERS routes reviews but is not enforced under the current
+zero-approval rule. Required independent/code-owner reviews need a separately
+authorized configuration and eligible independent reviewer. Stronger workflow
+identity needs organization-controlled required workflows or a separate App.
 
-1. Ensure a compliant PR has a successful `PR description` run in this repository
-   within the last seven days. Drafts qualify. Remove any deliberate CI-skip
-   marker through a new authorized commit before expecting checks to run.
-2. Open Settings → Rules → Rulesets → **Protect main**, ID **25351835**. Update
-   this existing applicable ruleset instead of adding a conflicting duplicate.
-3. Under Require status checks to pass, add exactly **PR description**, expected
-   source **GitHub Actions** (15368). Preserve both existing checks, strict mode,
-   targets, Active state and every other existing restriction; add no bypasses.
-4. Save only with explicit human authorization. Independently re-read the ruleset
-   and confirm the new context/source. On a disposable PR, demonstrate a
-   noncompliant description blocks merging and a corrected fresh edit passes.
-   Do not merge the disposable PR. Inspect any additional classic protection in UI.
-
-A failing Action alone does not block merging. Enforcement is pending human
-activation and independent verification. This delivery uses a `[skip ci]` commit
-because existing CI would run prohibited builds/Chromium; all hosted checks are
-therefore pending/skipped, not PASS. Do not merge until required checks are satisfied
-under separately approved verification scope.
+A failing Action alone does not block merging. No settings were changed. `[skip ci]`
+keeps existing pull_request build/Chromium CI from running on this delivery; it
+does not suppress pull_request_target after deployment. Hosted trusted execution
+and actual merge blocking remain unverified. Do not merge until existing required
+checks and independent review are satisfied under separately approved scope.
 
 ## Existing PR impact
 
-Inspected without mutation on 2026-10-24:
+Historical first-milestone inspection on 2026-10-24; not re-read or modified during
+P1 hardening (branches/descriptions can since have advanced):
 
 - [PR #4](https://github.com/ofir-rifo/data-grid/pull/4), Draft,
   `codex/local-performance-protocol` at `6f1ea82`: body is null. It needs all five
@@ -120,9 +129,9 @@ Inspected without mutation on 2026-10-24:
   accessibility, performance and production limitations explicit.
 
 Adding/merging this workflow does not itself emit a PR event for existing PRs or
-retroactively run checks. After the workflow is present in their merge ref (bring
-branches up to date if needed), a listed event such as description edit triggers
-validation. An unchanged older PR may lack the workflow/check until refreshed.
+retroactively run checks. After the trusted workflow is on main, a listed event
+such as description edit triggers validation from main, regardless of whether the
+PR branch contains the validator. There is no PR-code bootstrap fallback.
 Once the check is required, missing/failing results can block these PRs too; there
 is no grandfather exemption. No descriptions, branches or review states were changed.
 

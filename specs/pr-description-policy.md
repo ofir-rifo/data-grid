@@ -31,16 +31,15 @@ FAIL and NOT RUN require substantive reasons. Prose/subheadings may organize the
 section using entry continuation lines but cannot replace entries. Automation checks representation, not whether
 tests really ran or whether prose is truthful: reviewers retain that obligation.
 
-Draft and regular PRs receive identical validation. CLI reads only the real event
-payload's pull_request.body and fails closed on absent/malformed event data.
-The read-only pull_request workflow has no draft/path filters, no secrets,
-dependency installation, builds or privileged execution. One job name is stable:
-`PR description`. Unit tests exercise parsing, content rules, CLI and exact
-template/workflow contracts. Content is never interpolated into shell commands
-or GitHub workflow annotations. Current workflow code is reviewable PR code;
-read-only execution limits damage but cannot prevent a PR from changing its own
-validator. Review workflow changes before merging. Required checks are a separate,
-human-controlled repository setting; implementation alone does not enforce merges.
+Draft and regular PRs receive identical content validation. The local CLI reads
+the real event payload body and fails closed on absent/malformed data. Hosted
+enforcement follows [the hardened trust boundary](pr-description-trust-boundary.md):
+main-selected pull_request_target workflow, immutable trusted code, current API
+body and explicit head-SHA `PR description` status. No PR code executes; only
+status publication has write permission. Required settings remain human-controlled.
+The original merge-ref workflow architecture is superseded, without changing the
+canonical content rules above. Tests constrain parsing, CLI, policy/template,
+trusted reporter and complete workflow shape; text is never shell interpolation.
 
 Acceptance: all requested negative/positive cases have deterministic tests, errors
 name the offending section, malformed events exit nonzero, template drift fails,

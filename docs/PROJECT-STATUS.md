@@ -1,6 +1,40 @@
 # DataGrid project status
 
+## PR #6 trust-boundary hardening — 2026-10-24
+
+P1 finding confirmed: PR merge-ref YAML and scripts could certify themselves.
+Implemented main-selected pull_request_target workflow, pinned trusted workflow
+SHA checkout, unchanged canonical content policy, live API body/head validation,
+head-SHA PR description commit status and CODEOWNERS routing. No PR code executes.
+The status writer has narrowly scoped statuses:write, contents/pull-requests:read;
+no dependency installation, code/settings writes, caches, builds or browsers.
+
+PASS: 135 dependency-free format/security/static tests and new JS syntax checks
+on 2026-10-24. The original policy/validator/local CLI/template files are unchanged.
+No Nx/pnpm execution this task; standards-test/standards/typecheck NOT RUN because
+dependencies are unavailable and installation is prohibited. Hosted scheduling,
+fork status publication/source, duplicate-name attacks and merge blocking NOT RUN.
+
+Current GitHub observation: PR #6 open Draft, branch chore/pr-description-enforcement,
+main base 27b4f16. Protect main still requires only the two existing checks; zero
+approvals and no required owner review. No rules/settings or PR #4/#5 changes.
+Main lacks the trusted policy, so PR #6 cannot self-bootstrap trusted validation.
+Delivery uses [skip ci] to avoid existing prohibited build/browser CI; once deployed,
+the target workflow is not suppressed by that marker. No protections are bypassed.
+
+**BLOCKED** for activation/end-to-end assurance. CODEOWNERS alone is not enforcement;
+required status name/source is not workflow identity. PR #6 title/body update also
+returned connector 403; validated manual replacement is preserved locally and
+described in the security report. Branch fixes can be pushed without modifying PR
+metadata or its Draft state. Remaining review/activation,
+external-App/organization alternatives, stale-status windows and exact bootstrap:
+[security report](PR-DESCRIPTION-SECURITY.md),
+[trust specification](../specs/pr-description-trust-boundary.md). Self-review is
+not independent acceptance. Performance HOLD; production POC NO-GO.
+
 ## PR description policy milestone — 2026-10-24
+
+Historical first delivery; superseded by PR #6 hardening above where inconsistent.
 
 Delivery: branch pushed (`3d5b9e4` implementation); Draft PR creation blocked by
 connector 403 `Resource not accessible by integration`. No PR created. Validated

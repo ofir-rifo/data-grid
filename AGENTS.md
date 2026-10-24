@@ -34,6 +34,7 @@
 ## Engineering standards
 
 - All future Codex-generated PR descriptions must follow the canonical policy in `.github/scripts/pr-description-policy.mjs` and `specs/pr-description-policy.md`. Complete the generated `.github/pull_request_template.md`, report honest PASS/FAIL/NOT RUN results, and run the lightweight description validator before delivery. Draft PRs follow the same rules.
+- PR description enforcement must follow `specs/pr-description-trust-boundary.md`. Never execute PR-controlled code in its target-event workflow or add a PR-code bootstrap fallback. CODEOWNERS routing and named status checks alone are not independently enforced workflow identity; report deployment and protection limits honestly.
 
 - Read `docs/ENGINEERING-STANDARDS.md` before changing code/configuration. Preserve Nx/project lint rules and the documented legacy exceptions.
 - New authored styles must be `*.module.scss`; do not add global CSS/SCSS, `!important`, or blanket lint suppressions. Keep required legacy framework styles until their reviewed migration.

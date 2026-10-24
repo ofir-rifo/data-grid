@@ -1,5 +1,10 @@
 # PR description engineering report — 2026-10-24
 
+Historical first delivery report. The P1 architecture, current PR #6 state,
+verification and activation guidance are superseded by
+[PR-DESCRIPTION-SECURITY.md](PR-DESCRIPTION-SECURITY.md). Original results below
+are preserved as history; they are not verification of the hardened architecture.
+
 ## A. Status
 
 **BLOCKED** for full Definition of Done: implementation and lightweight regression
