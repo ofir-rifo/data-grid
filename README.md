@@ -1,6 +1,6 @@
 # DataGrid
 
-## Playground commands
+## Playground  commands
 
 Use Node 24 (the CI baseline) and the pinned pnpm 12.5.1. Install dependencies
 with `pnpm install --frozen-lockfile`, then run commands from the repository root:
