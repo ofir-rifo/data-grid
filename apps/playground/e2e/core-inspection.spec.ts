@@ -51,6 +51,7 @@ test('only pinned regions draw vertical dividers while cell and header content i
           const line = getComputedStyle(region, '::after');
           return {
             region: region.dataset.columnRegion,
+            shadow: region.dataset.pinnedShadow,
             backing: style.backgroundColor,
             isolation: style.isolation,
             z: style.zIndex,
@@ -80,7 +81,9 @@ test('only pinned regions draw vertical dividers while cell and header content i
         backing: 'rgb(25, 30, 40)',
         isolation: 'isolate',
         z: '0',
-        line: 'none',
+        shadow: 'left right',
+        width: '1px',
+        input: 'none',
       },
       {
         region: 'right',
@@ -94,6 +97,30 @@ test('only pinned regions draw vertical dividers while cell and header content i
       },
     ]);
   }
+  const center = page.locator(
+    '[aria-rowindex="1"] [data-column-region="center"]',
+  );
+  await center.evaluate((region) => {
+    const stage = region.closest<HTMLElement>('[dir="ltr"]')?.parentElement;
+    if (!stage) throw new Error('Missing theme ancestor');
+    stage.style.setProperty('--core-pinned-shadow-left', 'none');
+    stage.style.setProperty('--core-pinned-shadow-right', 'none');
+    stage.style.setProperty('--core-pinned-shadow-opacity', '0');
+  });
+  const disabled = await center.evaluate((region) =>
+    ['::before', '::after'].map((pseudo) => {
+      const style = getComputedStyle(region, pseudo);
+      return {
+        shadow: style.boxShadow,
+        opacity: style.opacity,
+        input: style.pointerEvents,
+      };
+    }),
+  );
+  expect(disabled).toEqual([
+    { shadow: 'none', opacity: '0', input: 'none' },
+    { shadow: 'none', opacity: '0', input: 'none' },
+  ]);
   await page.getByRole('checkbox', { name: 'Pin first / last' }).uncheck();
   await expect(page.locator('[data-trailing-border="suppressed"]')).toHaveCount(
     0,

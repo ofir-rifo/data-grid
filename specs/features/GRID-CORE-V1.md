@@ -153,6 +153,45 @@ can bleed through or leave a bordered sliver, at any fractional offset. There is
 no per-column border suppression attribute or scroll-dependent paint helper.
 This supersedes the earlier internal vertical-divider/overlap-band contract.
 
+Pinned shadows are renderer-only decoration painted into the clipped center
+region, not outside pinned wrappers (which must retain clipping). A visible left
+pin casts toward the center only when clamped `scrollLeft > 0`; a visible right
+pin casts toward the center only when `scrollLeft < maxScrollLeft`. Thus the
+right shadow can appear at the initial position when content is hidden to the
+right. No shadow without center width, an applicable pin or horizontal overflow.
+Header and body use identical conditions; touching pins have no center shadow.
+Transparent edge pseudo-elements paint soft shadows above center cells, clipped
+to their region, with pointer-events:none and no border/background/layout space.
+Existing pinned-only one-pixel separators remain their sole solid-line owners.
+
+Stable inherited CSS custom properties are the public customization contract:
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `--core-pinned-shadow-color` | `var(--core-text, #172337)` | Theme-aware shadow color |
+| `--core-pinned-shadow-opacity` | `0.18` | Effect opacity; `0` disables both |
+| `--core-pinned-shadow-offset` | `2px` | Centerward offset magnitude |
+| `--core-pinned-shadow-blur` | `6px` | Blur radius |
+| `--core-pinned-shadow-spread` | `0px` | Spread radius |
+| `--core-pinned-shadow-left` | Component-derived box-shadow | Full left-shadow override; `none` disables left |
+| `--core-pinned-shadow-right` | Mirrored component-derived box-shadow | Full right-shadow override; `none` disables right |
+
+Consumers set these properties on the demo's ancestor/theme container without
+private CSS-class overrides or new React props. Color may include alpha; opacity
+multiplies the complete effect. Full overrides accept a CSS box-shadow value and
+remain subject to common opacity and center clipping. Offset is a nonnegative
+length, blur a nonnegative length, spread a CSS length and opacity in [0,1].
+Explicit LTR grid coordinates remain stable inside RTL hosts; native RTL grid
+geometry is deferred. No automatic light/dark detection: inherited theme colors
+and consumer overrides determine appearance.
+
+Acceptance: deterministic pure/DOM cases cover start/middle/end, fractional
+scroll, no overflow, absent/empty pins and collapsed center; compiled SCSS checks
+opposite offsets, all token fallbacks, `none` overrides, opacity disablement,
+clipping, no solid border/background, no layout contribution and non-interception.
+Actual shadow softness, theme contrast and compositing require separately
+authorized browser acceptance; static token tests cannot establish painted pixels.
+
 Each region clips its own children, establishes an isolated stacking context and
 has an opaque themed backing surface. Center content stacks below pinned
 regions. `--core-surface` supplies that backing, falling back to `--core-cell` then

@@ -1,7 +1,7 @@
 import { calculateGridWindow, createGridGeometry } from '@org/grid-core';
 import type { ColumnDefinition } from '@org/grid-core';
 import { describe, expect, it } from 'vitest';
-import { getPinnedBoundary } from './pinned-boundaries';
+import { getPinnedBoundary, getPinnedShadows } from './pinned-boundaries';
 
 const columns: readonly ColumnDefinition<number>[] = Array.from(
   { length: 6 },
@@ -16,6 +16,63 @@ const columns: readonly ColumnDefinition<number>[] = Array.from(
 const geometry = createGridGeometry({ rowCount: 1, rowHeight: 10, columns });
 
 describe('pinned boundary paint ownership (pure renderer geometry)', () => {
+  it.each([
+    { scrollLeft: -1, shadow: 'right' },
+    { scrollLeft: 0, shadow: 'right' },
+    { scrollLeft: 0.25, shadow: 'left right' },
+    { scrollLeft: 10, shadow: 'left right' },
+    { scrollLeft: 19.75, shadow: 'left right' },
+    { scrollLeft: 20, shadow: 'left' },
+    { scrollLeft: 100, shadow: 'left' },
+  ])(
+    'shows only sides with hidden center content at $scrollLeft',
+    ({ scrollLeft, shadow }) => {
+      const window = calculateGridWindow(geometry, {
+        width: 100,
+        height: 10,
+        scrollTop: 0,
+        scrollLeft,
+      });
+      expect(getPinnedShadows(window)).toBe(shadow);
+    },
+  );
+
+  it.each(['left', 'right', 'both', 'none'])(
+    'requires visible %s pins as well as hidden content',
+    (pin) => {
+      const model = createGridGeometry({
+        rowCount: 1,
+        rowHeight: 10,
+        columns: columns.map((column) => ({
+          ...column,
+          pinned:
+            pin === 'both' || column.pinned === pin ? column.pinned : undefined,
+        })),
+      });
+      const window = calculateGridWindow(model, {
+        width: 60,
+        height: 10,
+        scrollTop: 0,
+        scrollLeft: 5,
+      });
+      expect(getPinnedShadows(window)).toBe(
+        pin === 'both' ? 'left right' : pin === 'none' ? undefined : pin,
+      );
+    },
+  );
+
+  it('omits shadows for no overflow, zero viewport and collapsed center even when pins have a separator', () => {
+    for (const width of [0, 20, 40, 120, 200]) {
+      const window = calculateGridWindow(geometry, {
+        width,
+        height: 10,
+        scrollTop: 0,
+        scrollLeft: 10,
+      });
+      expect(getPinnedShadows(window)).toBeUndefined();
+    }
+  });
+
   it('assigns both inner boundaries and only one owner when pins meet', () => {
     const roomy = calculateGridWindow(geometry, {
       width: 100,

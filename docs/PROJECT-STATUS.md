@@ -1,5 +1,28 @@
 # DataGrid project status
 
+## PR #5 customizable pinned shadows — 2026-10-24
+
+NOT MERGE READY. Specified defaults, inherited consumer tokens and acceptance
+before implementation. Center-edge pseudo-elements paint soft centerward shadows
+only beside visible pins with hidden center content: left after scroll start,
+right before scroll end. No shadows for zero center/overflow or absent pins.
+Pinned regions retain isolated opaque clipping and single-owner solid separators;
+transparent vertical cell borders, centered content and native input stay intact.
+
+Public CSS properties cover color (theme text fallback), opacity (0.18), offset
+(2px), blur (6px), spread (0px) and full left/right box-shadow values. Ancestor
+overrides need no private classes or new React props. Opacity 0 disables both;
+side value `none` disables that side. See architecture usage examples.
+
+PASS: 81 Playground tests including 16 new cases, 9 engineering-policy tests;
+typecheck/standards/Core and final GitHub results are in the delivery report.
+Compiled CSS/DOM token tests establish wiring, not browser computed inheritance
+or paint. Browser source updated but NOT RUN. No local browser/build/server,
+benchmark/performance or supervisor execution; no dependencies or other branches
+changed. Browser compositing/softness/theme contrast, native scroll/Picker/AT and
+independent acceptance remain missing. Keep Draft/unmerged. Performance HOLD;
+Production POC NO-GO. Earlier sections retain historical evidence.
+
 ## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
 
 NOT MERGE READY. The user's second reference explicitly requires visible vertical

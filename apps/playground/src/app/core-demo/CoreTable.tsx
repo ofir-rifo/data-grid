@@ -6,7 +6,7 @@ import type {
   RowSource,
 } from '@org/grid-core';
 import styles from './CoreDemo.module.scss';
-import { getPinnedBoundary } from './pinned-boundaries';
+import { getPinnedBoundary, getPinnedShadows } from './pinned-boundaries';
 
 const REGIONS: readonly ColumnRegion[] = ['left', 'center', 'right'];
 
@@ -100,6 +100,9 @@ export default function CoreTable<T>({
             key={region}
             className={regionClassName(region)}
             data-column-region={region}
+            data-pinned-shadow={
+              region === 'center' ? getPinnedShadows(window) : undefined
+            }
             style={{
               left: window.regions[region].x,
               width: window.regions[region].width,
@@ -152,6 +155,9 @@ export default function CoreTable<T>({
                 key={region}
                 className={regionClassName(region)}
                 data-column-region={region}
+                data-pinned-shadow={
+                  region === 'center' ? getPinnedShadows(window) : undefined
+                }
                 style={{
                   left: window.regions[region].x,
                   width: window.regions[region].width,

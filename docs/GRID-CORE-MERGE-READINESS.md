@@ -1,5 +1,23 @@
 # PR #5 safe-merge preparation — 2026-10-24
 
+## Customizable pinned shadows
+
+NOT MERGE READY. Shadows decorate center edges above center cells only when
+content is hidden behind an applicable pin. Pure window-based conditions retain
+geometry and scrolling. Existing pinned clip/surface/stacking, sole solid-line
+ownership, transparent cell dividers and vertical centering remain unchanged.
+No added DOM or public React API. Theme properties and usage examples are in
+GRID-CORE-ARCHITECTURE.md; opacity 0 or side box-shadow `none` disables effects.
+Spec and acceptance criteria were updated before implementation.
+
+81 Playground tests PASS (16 new pure/DOM/Sass cases); 9 policy tests PASS.
+Final source/Core checks, SHA, canonical body and remote CI are in delivery
+artifacts. No browser execution: token wiring and static opposite shadow offsets
+are verified, but actual inheritance, softness, theme contrast, clipping/scroll
+compositing and native input/AT still require independent authorized acceptance.
+No local build/server/performance/supervisor activity. Keep Draft/unmerged.
+Performance HOLD. Production POC NO-GO. Earlier sections are historical snapshots.
+
 ## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
 
 NOT MERGE READY. The user's second reference explicitly requires visible vertical

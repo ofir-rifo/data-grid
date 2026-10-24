@@ -21,6 +21,48 @@ function rule(selector: string): string {
 }
 
 describe('compiled inspection styles (not browser hit-testing/paint evidence)', () => {
+  it('casts opposite centerward shadows from transparent clipped edge strips without input or layout changes', () => {
+    const left = rule('.region[data-pinned-shadow~=left]::before');
+    const right = rule('.region[data-pinned-shadow~=right]::after');
+    expect(left).toContain('inset-inline-start: -1px');
+    expect(right).toContain('inset-inline-end: -1px');
+    expect(left).toContain('var(--core-pinned-shadow-offset, 2px) 0');
+    expect(right).toContain(
+      'calc(-1 * var(--core-pinned-shadow-offset, 2px)) 0',
+    );
+    for (const shadow of [left, right]) {
+      expect(shadow).toContain('position: absolute');
+      expect(shadow).toContain('inset-block: 0');
+      expect(shadow).toContain('width: 1px');
+      expect(shadow).toContain('z-index: 1');
+      expect(shadow).toContain('pointer-events: none');
+      expect(shadow).not.toMatch(/\b(?:border|background|padding|margin):/);
+    }
+    expect(rule('.region')).toContain('overflow: clip');
+    expect(rule('.cell')).toContain('border-inline-end: 1px solid transparent');
+  });
+
+  it('exposes all inherited shadow components and full-value none overrides without fixing tokens on the grid', () => {
+    for (const [side, pseudo] of [
+      ['left', 'before'],
+      ['right', 'after'],
+    ]) {
+      const shadow = rule(`.region[data-pinned-shadow~=${side}]::${pseudo}`);
+      expect(shadow).toContain(`box-shadow: var(--core-pinned-shadow-${side},`);
+      expect(shadow).toContain(
+        'var(--core-pinned-shadow-color, var(--core-text, #172337))',
+      );
+      expect(shadow).toContain('var(--core-pinned-shadow-blur, 6px)');
+      expect(shadow).toContain('var(--core-pinned-shadow-spread, 0px)');
+      expect(shadow).toContain(
+        'opacity: var(--core-pinned-shadow-opacity, 0.18)',
+      );
+    }
+    // Defaults live at use sites: ancestor tokens, including `none` and opacity 0,
+    // remain consumer-owned rather than being redeclared on internal elements.
+    expect(css).not.toMatch(/--core-pinned-shadow-[\w-]+\s*:/);
+  });
+
   it('vertically centers body and header text without changing horizontal alignment or fixed geometry', () => {
     for (const selector of ['.cell', '.header']) {
       const style = rule(selector);

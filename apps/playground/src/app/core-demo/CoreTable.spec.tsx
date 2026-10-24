@@ -31,6 +31,80 @@ const geometry = createGridGeometry({
 
 describe('CoreTable semantics (jsdom only, no browser layout or AT claim)', () => {
   it.each(['ltr', 'rtl'])(
+    'decorates only center header/body under a %s host and preserves consumer tokens',
+    (direction) => {
+      const viewport = { width: 120, height: 10 };
+      const tokens = {
+        '--core-pinned-shadow-color': '#abcdef',
+        '--core-pinned-shadow-opacity': '0.3',
+        '--core-pinned-shadow-blur': '9px',
+        '--core-pinned-shadow-spread': '1px',
+        '--core-pinned-shadow-left': 'none',
+        '--core-pinned-shadow-right': 'none',
+      };
+      const tree = (scrollLeft: number, opacity: string) => (
+        <div
+          data-testid="theme"
+          dir={direction}
+          style={{
+            color: 'inherit',
+            ...tokens,
+            ...{ '--core-pinned-shadow-opacity': opacity },
+          }}
+        >
+          <CoreTable
+            geometry={geometry}
+            window={calculateGridWindow(geometry, {
+              ...viewport,
+              scrollTop: 0,
+              scrollLeft,
+            })}
+            viewport={viewport}
+            source={source}
+          />
+        </div>
+      );
+      const view = render(tree(0, '0.3'));
+      for (const [scrollLeft, shadow] of [
+        [0, 'right'],
+        [0.5, 'left right'],
+        [60, 'left'],
+      ] as const) {
+        view.rerender(tree(scrollLeft, '0.3'));
+        const decorated = view.container.querySelectorAll(
+          '[data-pinned-shadow]',
+        );
+        expect(decorated).toHaveLength(2);
+        for (const region of decorated) {
+          expect(region.getAttribute('data-column-region')).toBe('center');
+          expect(region.getAttribute('data-pinned-shadow')).toBe(shadow);
+          expect(region.getAttribute('role')).toBe('presentation');
+        }
+        expect(
+          view.container.querySelectorAll('.' + styles['leftBoundary']),
+        ).toHaveLength(2);
+        expect(
+          view.container.querySelectorAll('.' + styles['rightBoundary']),
+        ).toHaveLength(2);
+      }
+      for (const [key, value] of Object.entries(tokens))
+        expect(view.getByTestId('theme').style.getPropertyValue(key)).toBe(
+          value,
+        );
+      view.rerender(tree(0.5, '0'));
+      expect(
+        view
+          .getByTestId('theme')
+          .style.getPropertyValue('--core-pinned-shadow-opacity'),
+      ).toBe('0');
+      // CSS disables decoration without changing geometry, semantics or scroll state.
+      expect(view.getByTestId('core-table').style.width).toBe('120px');
+      expect(view.getAllByRole('columnheader')).toHaveLength(5);
+      expect(view.container.querySelector('[data-trailing-border]')).toBeNull();
+    },
+  );
+
+  it.each(['ltr', 'rtl'])(
     'keeps only region separator owners under a %s host before and after scrolling',
     (direction) => {
       const viewport = { width: 115, height: 10 };

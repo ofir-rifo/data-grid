@@ -57,6 +57,37 @@
   z-index: 1;
 }
 
+.region[data-pinned-shadow~='left']::before,
+.region[data-pinned-shadow~='right']::after {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  width: 1px;
+  opacity: var(--core-pinned-shadow-opacity, 0.18);
+  pointer-events: none;
+  content: '';
+}
+
+.region[data-pinned-shadow~='left']::before {
+  inset-inline-start: -1px;
+  box-shadow: var(
+    --core-pinned-shadow-left,
+    var(--core-pinned-shadow-offset, 2px) 0 var(--core-pinned-shadow-blur, 6px)
+      var(--core-pinned-shadow-spread, 0px)
+      var(--core-pinned-shadow-color, var(--core-text, #172337))
+  );
+}
+
+.region[data-pinned-shadow~='right']::after {
+  inset-inline-end: -1px;
+  box-shadow: var(
+    --core-pinned-shadow-right,
+    calc(-1 * var(--core-pinned-shadow-offset, 2px)) 0
+      var(--core-pinned-shadow-blur, 6px) var(--core-pinned-shadow-spread, 0px)
+      var(--core-pinned-shadow-color, var(--core-text, #172337))
+  );
+}
+
 .leftBoundary::after,
 .rightBoundary::after {
   position: absolute;

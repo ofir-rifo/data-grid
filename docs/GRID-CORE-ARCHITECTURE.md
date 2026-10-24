@@ -63,6 +63,45 @@ Cells and headers share flex vertical centering and horizontal start alignment,
 without extra content wrappers or geometry changes. Fixed top padding alone did
 not center content as row height changed. Explicit LTR table/canvas remains
 stable under either surrounding text direction; native RTL geometry is deferred.
+Pinned shadows use center-region edge pseudo-elements because pinned wrappers
+must keep clipping their children. Pure renderer state selects left decoration
+after scrolling away from the start and right decoration before the end, only
+with visible pins and center overflow. Shadow paint stays above center cells and
+inside center clipping; pinned separators keep sole ownership of solid lines.
+No extra DOM, input handlers, geometry changes or Core responsibility.
+
+The public styling contract is inherited CSS properties, not private module
+classes: `--core-pinned-shadow-color`, `--core-pinned-shadow-opacity`,
+`--core-pinned-shadow-offset`, `--core-pinned-shadow-blur`,
+`--core-pinned-shadow-spread`, and full `--core-pinned-shadow-left`/`-right`
+box-shadow overrides. Defaults are theme text color, 0.18 opacity, 2px offset,
+6px blur and 0px spread. Example on a consumer's own theme container:
+
+```scss
+.myGridTheme {
+  --core-text: #e5eaf3;
+  --core-surface: #18202c;
+  --core-cell: #18202c;
+  --core-header: #253143;
+  --core-pinned-shadow-color: #000;
+  --core-pinned-shadow-opacity: 0.25;
+  --core-pinned-shadow-blur: 8px;
+  --core-pinned-shadow-spread: 1px;
+}
+
+.noPinnedShadows {
+  --core-pinned-shadow-opacity: 0;
+}
+
+.customLeftShadow {
+  --core-pinned-shadow-left: 3px 0 10px 1px rgb(0 0 0 / 40%);
+  --core-pinned-shadow-right: none;
+}
+```
+
+Wrap the inspection demo in that container; no internal selector or React API
+change. Full values use normal CSS box-shadow syntax; the common opacity still
+applies and center clipping prevents paint beyond the scrolling region.
 Static/Sass/jsdom regressions pass; actual sticky layout, native scrolling, Chrome
 Element Picker and visual theme behavior require separately authorized browser
 verification before merge acceptance.

@@ -1,5 +1,26 @@
 # AI development journal
 
+## 2026-10-24 — PR #5 inherited shadow styling contract
+
+Inspected clean isolated head 863f563. Updated feature specs and architecture
+first with centerward shadow conditions, defaults, consumer examples and browser
+acceptance limits. Kept existing custom-property theme architecture: no React
+props, extra DOM, global CSS, dependency or Core change. Pure renderer helper
+reads clamped window/pin visibility; center-region edge pseudo-elements avoid
+escaping pinned clipping and cannot intercept input or affect layout. Existing
+separators remain the sole solid-line owners; vertical centering stays intact.
+
+Added 12 pure visibility cases, 2 LTR/RTL-host DOM/token cases and 2 compiled-SCSS
+direction/token/disabled/pointer/layout cases. 81 Playground tests and 9 policy
+tests passed. Source checks/Core/final SHA and GitHub evidence are in the delivery
+report. Updated browser regression source for center decoration and inherited
+`none`/opacity overrides; NOT RUN. Static assertions do not establish real CSS
+inheritance/compositing or contrast. PR #4 remains on its static-only handle
+review, inspected read-only before checks; no native runtime verification here.
+No builds/servers, browsers, benchmarks/performance or supervisor work. No test
+failure or weakened assertion. Independent browser/AT/review acceptance remains
+required. Performance HOLD; Production POC NO-GO; keep PR #5 Draft/unmerged.
+
 ## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
 
 NOT MERGE READY. The user's second reference explicitly requires visible vertical
