@@ -25,7 +25,7 @@ export function parseSections(body) {
 }
 
 function plain(value) {
-  return value.replace(/[`*_>#\[\]{}()~\-]/g, '').trim();
+  return value.replace(/[`*_>#[\]{}()~-]/g, '').trim();
 }
 
 function substantive(value) {

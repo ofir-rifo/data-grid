@@ -1,5 +1,25 @@
 # DataGrid project status
 
+## PR #6 CI lint correction — 2026-10-24, pre-push evidence
+
+Inspected actual GitHub-hosted CI run 40091897174 at head 143277b: typecheck
+and all nine engineering policy tests passed; standards failed with five errors
+(two no-useless-escape, three no-regex-spaces). Conventions run 40091897176 passed.
+Later unit/build/Chromium steps were skipped. Nine legacy warnings were not errors.
+
+Corrected only redundant character-class escapes and literal-space regex spelling.
+PASS locally: 157 serial dependency-free policy/security tests, changed-module
+syntax checks, Git whitespace checks; exhaustive comparison confirms identical
+character membership across all 65,536 UTF-16 code units. No canonical-policy,
+workflow, permissions or status-reporter behavior changes; no rule suppressions.
+
+GitHub-hosted CI and Conventions execution is explicitly authorized for this fix.
+At this pre-push checkpoint the new hosted results are not yet available; the final
+delivery report identifies the pushed head and actual complete results. No local
+build/browser/performance/supervisor workloads. PR #6 stays Draft, protections and
+PR #4/#5 untouched. Trusted-policy bootstrap/activation limits remain separate from
+CI success. Performance HOLD; production POC NO-GO.
+
 ## PR #6 final SHA compatibility review — 2026-10-24
 
 Verified official GitHub variable/event/context/rerun documentation. It defines

@@ -1,5 +1,23 @@
 # AI development journal
 
+## 2026-10-24 — PR #6 hosted CI lint correction
+
+Reviewed original hosted job 120866114369 (run 40091897174): five confirmed ESLint
+errors in the punctuation class and workflow-static-test regexes; nine existing
+Playwright warnings. Typecheck and nine policy tests passed; later steps skipped.
+Conventions run 40091897176 passed on a GitHub-hosted Ubuntu runner.
+
+Removed only unnecessary escapes and replaced literal space runs with equivalent
+quantifiers. Local PASS: syntax, 157 bounded policy/security tests and exhaustive
+65,536-code-unit equivalence check. No new regression is needed for an exhaustively
+equivalent character class; existing structural/security regressions are retained.
+No policy/security/workflow changes, dependencies, autofixes or suppressions.
+
+Hosted rerun authorized; commit without a skip marker, push normally and inspect
+all steps including unit tests, build and Chromium. Those results occur after this
+pre-push entry and are reported with the final head. No heavy local workload,
+protection changes or PR #4/#5 mutation. Keep Draft. Performance HOLD; POC NO-GO.
+
 ## 2026-10-24 — PR #6 final SHA compatibility review
 
 Read official GitHub variables, contexts, target-event and rerun docs. Separate
