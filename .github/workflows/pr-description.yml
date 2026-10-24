@@ -1,0 +1,34 @@
+name: PR description policy
+on:
+  # Workflow definition is selected from the default branch, never the PR tree.
+  pull_request_target:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize, ready_for_review, converted_to_draft]
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+concurrency:
+  group: pr-description-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  description:
+    # The required context is a head-SHA commit status published by the reporter.
+    name: Trusted description reporter
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ofir-rifo/data-grid
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Validate trusted policy and publish head status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_OPTIONS: --max-old-space-size=256
+        run: node .github/scripts/report-pr-description.mjs
