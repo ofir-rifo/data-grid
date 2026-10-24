@@ -82,7 +82,8 @@ export default function CoreTable<T>({
           <div
             role="presentation"
             key={region}
-            className={styles['region']}
+            className={`${styles['region']} ${region === 'right' && window.regions.right.width > 0 ? styles['rightBoundary'] : ''}`}
+            data-column-region={region}
             style={{
               left: window.regions[region].x,
               width: window.regions[region].width,
@@ -133,7 +134,8 @@ export default function CoreTable<T>({
               <div
                 role="presentation"
                 key={region}
-                className={styles['region']}
+                className={`${styles['region']} ${region === 'right' && window.regions.right.width > 0 ? styles['rightBoundary'] : ''}`}
+                data-column-region={region}
                 style={{
                   left: window.regions[region].x,
                   width: window.regions[region].width,

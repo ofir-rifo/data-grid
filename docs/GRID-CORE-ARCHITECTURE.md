@@ -45,3 +45,14 @@ proposed production `grid-react` package. Production keyboard navigation,
 assistive-technology acceptance, scheduling, segmentation and runtime performance
 are deferred. The POC exit decision remains unresolved; Performance HOLD and
 production POC NO-GO remain in effect. No unmerged PR #4 code is a dependency.
+
+UI inspection correction: the table is now a sticky viewport child of the native
+scroll canvas. Restoring pointer hit testing on a sibling overlay alone would
+leave cell input without a scrollport ancestor; native scrolling is preserved by
+DOM ownership instead of introducing synthetic wheel forwarding. The canvas no
+longer has aria-hidden, since it now owns the semantic table. Geometry and Core
+are unchanged. A right-region pseudo-element draws the themed leading boundary
+over cell backgrounds without occupying layout space or intercepting input.
+Static/Sass/jsdom regressions pass; actual sticky layout, native scrolling, Chrome
+Element Picker and visual theme behavior require separately authorized browser
+verification before merge acceptance.

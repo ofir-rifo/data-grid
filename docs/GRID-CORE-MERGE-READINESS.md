@@ -1,0 +1,115 @@
+# PR #5 safe-merge preparation — 2026-10-24
+
+Verdict: NOT MERGE READY. This record distinguishes verified source/DOM/style
+contracts from required browser and integration acceptance.
+
+## Root-cause assessment and fixes
+
+The right pinned region had no independent leading-edge rule. Every cell drew
+only a trailing border; the nearest center-cell border can be outside its clipped
+viewport. Added a right-region pseudo-element to both header and body rows. It
+is anchored to the region's leading edge, overlays backgrounds with z-index 1,
+uses `--core-pinned-separator` → `--core-border` → default color, takes no layout
+space and cannot intercept input. Zero-width/unpinned right regions omit it.
+Actual pixels and themed visual contrast remain browser acceptance work.
+
+The table had pointer-events:none, inherited by its cells. This is source-level
+ordinary hit-test exclusion, consistent with the reported Picker symptom; Chrome
+DevTools itself was not launched/reproduced. Merely enabling pointers on the old
+sibling overlay would leave cell wheel/touch input outside the native scrollport.
+Moved the semantic table inside the physical canvas/scrollport and made its
+viewport layer sticky on both axes. Restored pointer-events:auto. The canvas is
+no longer aria-hidden. No wheel forwarding, preventDefault, cell-size changes or
+Core changes. Native scrolling and Picker success still require browser evidence.
+
+The explicit LTR canvas is preserved inside RTL pages; logical CSS positioning
+respects that contract. Full RTL grid geometry is still deferred. Existing theme
+variables, ARIA positions, stable IDs, row windows and scroll mapping are retained.
+
+Standards references: [pointer hit testing](https://www.w3.org/TR/css-ui-4/#pointer-events-control)
+and [sticky positioning](https://www.w3.org/TR/css-position-3/#sticky-pos).
+
+## Changed files and architectural review
+
+- `specs/features/GRID-CORE-V1.md`: pre-code input, separator, layout and acceptance contracts.
+- `apps/playground/src/app/core-demo/CoreDemo.module.scss`: sticky/hit-testable table and boundary pseudo-element.
+- `CoreDemo.tsx` in the same folder: native scroll ancestry and accessible canvas.
+- `CoreTable.tsx`: matching header/body boundary ownership on visible right regions.
+- `CoreDemo.spec.tsx`, `CoreTable.spec.tsx`, new `CoreDemo.styles.spec.ts`: four new regressions.
+- `apps/playground/e2e/core-inspection.spec.ts`: bounded browser regression source, NOT RUN.
+- Architecture, project status, AI journal and this record: decisions, evidence and blockers.
+
+Core remains framework-independent with ES2022-only production types, strict
+generics, immutable geometry, original/visual column positions and stable IDs.
+No new Core or data-source responsibility, networking, global mutable state or
+dependency. Setup O(C); scroll O(log Ccenter); render-window work remains bounded
+by viewport/overscan/pins. SOLID/KISS favors native DOM ownership over a new input
+forwarding subsystem. No new styles outside SCSS Modules or lint suppressions.
+
+## Executed bounded checks
+
+For Nx commands, environment was NX_DAEMON=false, NX_NO_CLOUD=true,
+NX_SKIP_REMOTE_CACHE=true, NX_SKIP_NX_CACHE=true, NX_ISOLATE_PLUGINS=false and
+NODE_OPTIONS=--max-old-space-size=2048. Installed tools were reused through
+worktree-local package links; caches and original workspace links were excluded.
+No dependency install/update or pnpm auto-fetch attempt occurred.
+
+| Exact command | Result |
+| --- | --- |
+| `node node_modules/nx/dist/bin/nx.js run @org/grid-core:typecheck --excludeTaskDependencies --skipSync --parallel=1` | PASS |
+| `node node_modules/nx/dist/bin/nx.js run @org/playground:typecheck --excludeTaskDependencies --skipSync --parallel=1` | PASS, including E2E source types |
+| `node node_modules/nx/dist/bin/nx.js run @org/grid-core:test --excludeTaskDependencies --skipSync --parallel=1` | PASS, 11 tests |
+| `node node_modules/nx/dist/bin/nx.js run @org/playground:test --excludeTaskDependencies --skipSync --parallel=1 --args="--run --maxWorkers=1 --no-file-parallelism"` | PASS, 51 tests in 10 files |
+| `node node_modules/nx/dist/bin/nx.js run @org/playground:standards-test --excludeTaskDependencies --skipSync --parallel=1` | PASS, 9 policy tests |
+| `node node_modules/nx/dist/bin/nx.js run @org/playground:standards --excludeTaskDependencies --skipSync --parallel=1` | PASS, 50 source/3 style files; 0 errors, 9 existing warnings |
+| `git diff --check` and staged equivalent | PASS |
+
+Initial Playground run: FAIL at collection of the new style fixture, because
+Vite rewrote the SCSS asset URL. The filesystem-path correction retained every
+assertion; complete rerun passed. Nx's known native-cache permission warning used
+the original module fallback. Unit suites used bounded escalation for previously
+demonstrated sandbox temporary-file limitations. No existing tests were removed.
+
+Compiled SCSS assertions check sticky logical offsets, hit testing, token
+fallbacks, non-intercepting separator and absence of geometry-changing border.
+DOM tests check header/body symmetry, native scroll ancestry, no aria-hidden
+ancestor and uncancelled event propagation. These do not establish native browser
+scrolling, painted separators, DevTools behavior or assistive-technology results.
+
+NOT RUN: browser/Playwright, local build/server, screenshots, Element Picker,
+screen-reader acceptance, benchmarks/stress/performance or supervisor verification.
+Browser execution requires separately scoped safety authorization. The new E2E
+source must not be treated as an executed test or silently added to browser CI.
+
+## Main / PR #6 integration and canonical policy
+
+Fetched main is `4f207d1186301a067af642c0530bde4769e02fd9`, the PR #6 squash.
+PR #5's earlier head is `08cdf9b94b950559b64efb37a758488e43b66c95`. Read-only
+`git merge-tree --write-tree HEAD origin/main` reports:
+
+- Add/add conflict: `docs/AI-DEVELOPMENT-JOURNAL.md`.
+- Content conflict: `docs/PROJECT-STATUS.md`.
+
+No actual merge, rebase, force push or main edit was performed under the explicit
+no-merge constraint. Both journal/status histories must be retained in a future
+authorized synchronization. No source/config integration conflict was reported,
+but local tests are feature-branch checks, not a validated conflict-free combined
+merge candidate. Main's canonical five-section policy is mandatory. Its exact
+trusted scripts can be exported from the fetched SHA for local body validation
+without importing policy implementation into this branch or changing protections.
+
+## GitHub verification and remaining blockers
+
+No review threads, reviews or conversation comments were returned at inspection.
+There is no independent approval in that evidence. Historical CI and Conventions
+at `08cdf9b` passed, but cannot verify the new renderer patch. The delivery report
+records the actual final commit, current-head DataGrid checks, Conventional commits
+and PR description status and their URLs. Missing/pending checks are not PASS.
+
+Merge blockers: unresolved main conflicts; missing authorized browser proof for
+sticky layout, native scrolling, separator/themes and hit testing; remaining
+accessibility acceptance; independent Tech Lead acceptance and all required
+current-candidate checks. If GitHub denies description writes, supply the exact
+validated canonical replacement text without an authentication bypass.
+
+Performance HOLD. Production POC NO-GO. Keep PR #5 Draft. Do not merge.

@@ -1,5 +1,35 @@
 # DataGrid project status
 
+## PR #5 UI inspection / merge-readiness preparation — 2026-10-24
+
+NOT MERGE READY. Work isolated on `feature/grid-core` in
+`C:\Users\ofirr\Documents\Codex\data-grid-pr5-merge`; the earlier checkout is now
+on another branch and was preserved. Main fetched at `4f207d1` includes merged
+PR #6. Read-only merge-tree diagnosis finds an add/add AI-development-journal
+conflict and a project-status content conflict. No branch merge, rebase, force
+push, main modification or protection change was performed. Both histories need
+preservation in a separately authorized integration operation.
+
+Spec-first renderer fixes: explicit themed right pinned-region separator,
+hit-testable table nested inside the native scroll canvas, sticky viewport layer,
+and accessible canvas ancestry. Core API/geometry/identity/window algorithms
+unchanged. Native input is not replaced with custom wheel forwarding.
+
+PASS locally: 11 Core tests; 51 Playground tests including four new regression
+cases; 9 engineering policy tests; Core/Playground typechecks; standards with
+0 errors and 9 existing warnings. Initial new Sass-test fixture failed because
+Vite rewrote its asset URL; corrected to a filesystem path, all assertions kept,
+full suite rerun PASS. No existing test was weakened or removed.
+
+Browser/Playwright, Chrome Element Picker, painted separator/theme verification,
+native scrolling and assistive technology NOT RUN: current safety authorization
+does not cover them. No local build, server, performance or supervisor workload.
+PR #4's current read-only inspected scope explicitly excludes native verification;
+bounded local checks were sequential. Current-head CI/description publication
+results are recorded in the delivery report, not inferred from older green runs.
+See [merge-readiness record](GRID-CORE-MERGE-READINESS.md).
+Performance HOLD; production POC NO-GO.
+
 ## PR #5 review remediation — 2026-10-24
 
 Audited the full 28-file PR at `369a878` against main `27b4f16`, then remediated

@@ -202,19 +202,20 @@ export default function CoreDemo() {
           }}
         >
           <div
-            aria-hidden="true"
+            data-testid="core-canvas"
             style={{
               width: physicalWidth,
               height: physicalHeight + ROW_HEIGHT,
             }}
-          />
+          >
+            <CoreTable
+              geometry={geometry}
+              window={window}
+              viewport={viewport}
+              source={source}
+            />
+          </div>
         </div>
-        <CoreTable
-          geometry={geometry}
-          window={window}
-          viewport={viewport}
-          source={source}
-        />
       </div>
       <div className={styles['debug']} data-testid="core-debug">
         Visible rows [{window.visibleRows.start}, {window.visibleRows.end});

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { calculateGridWindow, createGridGeometry } from '@org/grid-core';
 import type { ColumnDefinition, RowSource } from '@org/grid-core';
 import CoreTable from './CoreTable';
+import styles from './CoreDemo.module.scss';
 
 afterEach(cleanup);
 
@@ -29,6 +30,71 @@ const geometry = createGridGeometry({
 });
 
 describe('CoreTable semantics (jsdom only, no browser layout or AT claim)', () => {
+  it('marks each exposed right boundary consistently without adding semantic cells', () => {
+    const viewport = { width: 180, height: 20 };
+    const window = calculateGridWindow(geometry, {
+      ...viewport,
+      scrollTop: 0,
+      scrollLeft: 0,
+    });
+    const view = render(
+      <CoreTable
+        geometry={geometry}
+        window={window}
+        viewport={viewport}
+        source={source}
+      />,
+    );
+    const boundaries = view.container.querySelectorAll(
+      '[data-column-region="right"]',
+    );
+    expect(boundaries).toHaveLength(3);
+    for (const boundary of boundaries) {
+      expect(boundary.classList.contains(styles['rightBoundary'])).toBe(true);
+      expect(boundary.getAttribute('role')).toBe('presentation');
+    }
+    expect(
+      view.container.querySelectorAll(`.${styles['rightBoundary']}`),
+    ).toHaveLength(3);
+    expect(view.getAllByRole('cell')).toHaveLength(12);
+    const narrow = { width: 20, height: 20 };
+    view.rerender(
+      <CoreTable
+        geometry={geometry}
+        window={calculateGridWindow(geometry, {
+          ...narrow,
+          scrollTop: 0,
+          scrollLeft: 0,
+        })}
+        viewport={narrow}
+        source={source}
+      />,
+    );
+    expect(
+      view.container.querySelectorAll(`.${styles['rightBoundary']}`),
+    ).toHaveLength(0);
+    const unpinned = createGridGeometry({
+      rowCount: source.count,
+      rowHeight: 10,
+      columns: columns.map((column) => ({ ...column, pinned: undefined })),
+    });
+    view.rerender(
+      <CoreTable
+        geometry={unpinned}
+        window={calculateGridWindow(unpinned, {
+          ...viewport,
+          scrollTop: 0,
+          scrollLeft: 0,
+        })}
+        viewport={viewport}
+        source={source}
+      />,
+    );
+    expect(
+      view.container.querySelectorAll(`.${styles['rightBoundary']}`),
+    ).toHaveLength(0);
+  });
+
   it('uses increasing full visual positions for interleaved pins in every row', () => {
     const viewport = { width: 180, height: 20 };
     const window = calculateGridWindow(geometry, {

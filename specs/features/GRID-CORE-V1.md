@@ -117,6 +117,24 @@ empty-data tables are allowed when columns exist. Buffered rows/cells may remain
 mounted beyond the visible window; screen-reader acceptance remains pending.
 Scroll diagnostics are ordinary text, not a live status announcement on every
 scroll update. The scroll canvas is explicitly LTR to match Core coordinates.
+
+The inspection table is a sticky viewport layer inside the scroll canvas and
+native scrollport, not a pointer-transparent sibling overlay. Cells and headers
+participate in normal pointer hit testing. Wheel/touch input over cells must have
+the native scrollport in its ancestor chain; no synthetic wheel forwarding or
+preventDefault is introduced. Sticky viewport size and canvas extents preserve
+the existing logical/physical mapping. The canvas must not hide its table from
+the accessibility tree. Chrome Element Picker behavior requires browser evidence;
+static removal of hit-test exclusion alone is not a browser acceptance result.
+
+A visible right pinned region draws a one-pixel separator at its own leading
+edge in both header and body rows, independent of clipped center-cell borders.
+Use logical positioning within the explicit LTR canvas. The separator uses
+`--core-pinned-separator`, falling back to `--core-border` then the default border
+color. It overlays content without changing column widths/offsets, is clipped to
+the region and cannot intercept pointer events. Omit it for unpinned/zero-width
+right regions. Full RTL virtualization remains deferred; an RTL surrounding page
+must not change this demo's explicit LTR coordinate contract.
 No sorting, filtering, selection, editing, grouping, variable-height rows,
 fetching, full plugin system or production navigation in this milestone.
 
@@ -135,6 +153,16 @@ binary-search ranges against an independent interval-intersection oracle over
 small fixtures. Demonstrate no row access during window calculations.
 Core tsconfig has ES2022 only and no ambient browser/framework types. Add import
 restrictions as an additional boundary check.
+
+Separator/hit-testing acceptance: bounded DOM unit tests assert native scroll
+ancestry, accessible table ownership, matching header/body boundary classes,
+zero-width/unpinned omission, and uncancelled pointer/wheel event propagation.
+Compiled-SCSS contract tests check sticky offsets, hit testing, themed separator
+positioning and no geometry-changing border. Separately authorized browser tests
+must check actual hit targets, native scrolling over cells, pinned alignment and
+separator style/placement before/after scrolling, with theme overrides and an
+RTL surrounding page. jsdom/static Sass checks cannot satisfy those visual/native
+input acceptance criteria.
 
 Demo must expose configurable bounded counts, a million-row preset, both axes,
 pinning, visible/render windows, offsets, dimensions and cell count. Browser tests

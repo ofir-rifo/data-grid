@@ -44,6 +44,43 @@ function measure(scrollport: HTMLElement, width: number, height: number): void {
 }
 
 describe('CoreDemo adapter (bounded jsdom unit tests)', () => {
+  it('keeps targetable cell event paths inside the accessible native scrollport', () => {
+    const view = render(<CoreDemo />);
+    const scrollport = view.getByTestId('core-scrollport');
+    measure(scrollport, 300, 96);
+    const table = view.getByRole('table');
+    expect(table.closest('[data-testid="core-scrollport"]')).toBe(scrollport);
+    expect(table.closest('[aria-hidden="true"]')).toBeNull();
+    expect(view.getByTestId('core-canvas').contains(table)).toBe(true);
+    const cell = view.getAllByRole('cell')[0];
+    let wheelTarget: EventTarget | null = null;
+    scrollport.addEventListener(
+      'wheel',
+      (event) => {
+        wheelTarget = event.target;
+      },
+      { once: true },
+    );
+    const wheel = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: 32,
+    });
+    fireEvent(cell, wheel);
+    expect(wheelTarget).toBe(cell);
+    expect(wheel.defaultPrevented).toBe(false);
+    let clickTarget: EventTarget | null = null;
+    scrollport.addEventListener(
+      'click',
+      (event) => {
+        clickTarget = event.target;
+      },
+      { once: true },
+    );
+    fireEvent.click(cell);
+    expect(clickTarget).toBe(cell);
+  });
+
   it('keeps scroll diagnostics out of live status and enforces its LTR coordinate contract', () => {
     const view = render(
       <div dir="rtl">

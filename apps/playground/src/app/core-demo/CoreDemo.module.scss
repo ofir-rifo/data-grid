@@ -27,10 +27,11 @@
 }
 
 .table {
-  position: absolute;
-  inset: 0 auto auto 0;
+  position: sticky;
+  inset-block-start: 0;
+  inset-inline-start: 0;
   overflow: clip;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .body {
@@ -47,6 +48,17 @@
 .region {
   position: absolute;
   overflow: clip;
+}
+
+.rightBoundary::after {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 1px;
+  background: var(--core-pinned-separator, var(--core-border, #ccd4df));
+  pointer-events: none;
+  content: '';
 }
 
 .cell,
