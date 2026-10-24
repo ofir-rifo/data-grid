@@ -2,6 +2,10 @@
 
 ## PR description policy milestone — 2026-10-24
 
+Delivery: branch pushed (`3d5b9e4` implementation); Draft PR creation blocked by
+connector 403 `Resource not accessible by integration`. No PR created. Validated
+description and manual Draft creation steps are preserved in the delivery artifacts.
+
 Implemented on isolated `chore/pr-description-enforcement` from main `27b4f16`:
 specified canonical format, executable section policy, generated GitHub template,
 dependency-free event validator, read-only PR workflow, regression tests and

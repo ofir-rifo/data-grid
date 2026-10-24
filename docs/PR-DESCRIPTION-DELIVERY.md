@@ -112,8 +112,19 @@ both missing and failing results; no exemption exists.
 Dedicated worktree `.worktrees/pr-description`, branch
 `chore/pr-description-enforcement`, based on main `27b4f16`. Original dirty PR #4
 checkout and PR #5 worktree remain untouched. Only this milestone's named files
-are staged/committed. Delivery commit, Draft URL and final remote state are reported
-in the final chat response. No merge or Ready for Review action is authorized.
+are staged/committed. Implementation commit `3d5b9e4` was pushed successfully.
+GitHub Draft creation returned 403 `Resource not accessible by integration` from
+the create-pull-request endpoint. No PR was created; no credential workaround was
+attempted. The proposed description passed the event CLI before submission.
+Final evidence-documentation commit is reported in chat. No hosted checks exist
+for a new PR because creation failed; the skip marker remains intentional.
+
+Manual delivery: open
+[the creation form](https://github.com/ofir-rifo/data-grid/compare/main...chore/pr-description-enforcement?expand=1),
+use title `chore: enforce canonical PR description policy`, paste the validated
+local `_tmp_pr-body.md`, and choose **Create draft pull request** from the creation
+button dropdown. Keep base main and compare chore/pr-description-enforcement.
+No merge or Ready for Review action is authorized.
 
 ## I. Remaining risks and approval decisions
 
@@ -127,7 +138,7 @@ Performance HOLD; production POC NO-GO remains unchanged.
 
 ## J. Review artifacts
 
-The Draft PR Files changed view provides the complete authoritative patch. A local
+The branch compare view provides the complete authoritative patch. A local
 ignored `_tmp_pr-description.patch` is exported after commit for offline inspection.
 Read the policy specification, operational guide, regression tests, workflow and
 status/journal together. Self-review is not independent Tech Lead acceptance.
