@@ -1,5 +1,29 @@
 # DataGrid project status
 
+## PR description policy milestone — 2026-10-24
+
+Implemented on isolated `chore/pr-description-enforcement` from main `27b4f16`:
+specified canonical format, executable section policy, generated GitHub template,
+dependency-free event validator, read-only PR workflow, regression tests and
+[operational guidance](PR-DESCRIPTIONS.md). All future Codex PRs must conform.
+PASS: Node regression suite, 100 tests on 2026-10-24, including CLI, template
+consistency and static workflow/security contracts. Initial 97/100 result exposed
+a template-prompt matcher defect; fixed and rerun successfully.
+
+NOT RUN: Nx standards-test/standards/typecheck, installed tooling unavailable.
+Read-only Nx discovery unexpectedly attempted pnpm auto-install and failed on DNS;
+stopped without installing/committing dependencies. Hosted CI deliberately skipped
+on delivery to avoid existing build/Chromium workloads. No performance, Stage 0,
+canary, browser or build executed. Self-review does not constitute Tech Lead approval.
+
+Read-only GitHub inspection: active Protect main ruleset 25351835 requires the two
+existing checks; `PR description` is not required. Classic protection inspection
+blocked by connector 403; no settings changed. Activation and independent merge
+blocking verification are pending human action. PR #4/#5 remain untouched; both
+current descriptions would fail. Existing local dirty supervisor work preserved.
+See [journal](AI-DEVELOPMENT-JOURNAL.md), policy and delivery report for evidence,
+limits and next steps. Performance HOLD; production POC NO-GO remains unchanged.
+
 Last reviewed: 2026-10-18. This handoff retains historical authorizations/results and the current PR #3 evidence review; proposals are not authorization for new work.
 
 ## Objective and phase

@@ -1,0 +1,26 @@
+name: PR description policy
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review, converted_to_draft]
+permissions:
+  contents: read
+concurrency:
+  group: pr-description-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  description:
+    name: PR description
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Test policy and template consistency
+        run: node --test --test-concurrency=1 .github/scripts/pr-description.test.mjs
+      - name: Validate event PR description
+        run: node .github/scripts/check-pr-description.mjs
