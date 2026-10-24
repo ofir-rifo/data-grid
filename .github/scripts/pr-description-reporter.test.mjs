@@ -109,7 +109,7 @@ for (const draft of [true, false]) test(`fork and ordinary PR equivalence, draft
 for (const [key, value] of [
   ['GITHUB_EVENT_NAME', 'pull_request'], ['GITHUB_REPOSITORY', 'attacker/fork'],
   ['GITHUB_WORKFLOW_REF', `${repository}/.github/workflows/pr-description.yml@refs/heads/evil`],
-  ['GITHUB_WORKFLOW_SHA', 'main'], ['GITHUB_SHA', head], ['GITHUB_REF', 'refs/pull/6/merge'],
+  ['GITHUB_WORKFLOW_SHA', 'main'], ['GITHUB_SHA', 'main'], ['GITHUB_REF', 'refs/pull/6/merge'],
   ['GITHUB_RUN_ID', '123/../../evil'],
 ]) test(`reject untrusted runtime ${key}`, async () => {
   const { env } = fixture();
@@ -277,4 +277,99 @@ test('trusted runner binds checkout and test paths without shell or token inheri
   assert.match(runner, /spawnSync\(process.execPath/);
   assert.match(runner, /JSON.stringify\(/);
   assert.doesNotMatch(runner, /shell:\s*true|execSync\(|head\.repo|event\.pull_request|import\(event/);
+});
+
+for (const action of ['opened', 'edited', 'reopened', 'synchronize', 'ready_for_review', 'converted_to_draft']) {
+  for (const eventSha of [trusted, 'c'.repeat(40)]) test(`${action} accepts independently valid event/workflow SHAs (${eventSha === trusted ? 'equal' : 'different'})`, async () => {
+    const data = fixture();
+    data.event.action = action;
+    data.env.GITHUB_SHA = eventSha;
+    const { result, calls } = await run({ context: { event: data.event, env: data.env } });
+    assert.equal(result.valid, true);
+    assert.ok(calls.filter(({ method }) => method === 'POST').every(({ url }) => url.endsWith(`/statuses/${head}`)));
+  });
+}
+
+for (const [key, value] of [
+  ['GITHUB_SHA', undefined], ['GITHUB_SHA', 'g'.repeat(40)],
+  ['GITHUB_WORKFLOW_SHA', undefined], ['GITHUB_WORKFLOW_SHA', 'g'.repeat(40)],
+]) test(`reject missing/malformed ${key}: ${value}`, async () => {
+  const data = fixture();
+  data.env[key] = value;
+  const calls = [];
+  await assert.rejects(run({ context: { env: data.env }, calls }));
+  assert.deepEqual(calls, []);
+});
+
+test('a future main execution does not require the original pinned workflow revision', async () => {
+  const data = fixture();
+  data.env.GITHUB_SHA = 'd'.repeat(40);
+  data.env.GITHUB_WORKFLOW_SHA = 'e'.repeat(40);
+  assert.equal((await run({ context: { env: data.env } })).result.valid, true);
+  // This tests distinct valid metadata, not a claim about GitHub's actual SHA
+  // selection on a later commit. The workflow still pins checkout to workflow SHA.
+});
+
+test('an old rerun re-reads current body and cannot certify its stale head', async () => {
+  const data = fixture();
+  data.env.GITHUB_SHA = 'd'.repeat(40);
+  data.env.GITHUB_RUN_ATTEMPT = '2';
+  data.event.pull_request.body = goodBody;
+  const invalid = await run({ context: { event: data.event, env: data.env }, snapshot: (_count, live) => ({ ...live, body: 'TODO' }) });
+  assert.equal(invalid.result.valid, false);
+  const calls = [];
+  await assert.rejects(run({ context: { env: data.env }, calls, snapshot: (_count, live) => ({ ...live, head: { sha: 'f'.repeat(40) } }) }));
+  assert.ok(calls.filter(({ method }) => method === 'POST').every(({ url }) => url.endsWith(`/statuses/${head}`)));
+  assert.ok(!calls.some((call) => call.body?.state === 'success'));
+});
+
+for (const failState of ['success', 'failure']) test(`${failState} publication failure cannot return a valid result`, async () => {
+  const data = fixture();
+  const states = [];
+  await assert.rejects(reportDescription({
+    ...data,
+    verifyPolicy: async () => states.push('gate'),
+    request: async (_url, init) => {
+      if (!init) return failState === 'failure' ? { ...data.live, body: 'TODO' } : data.live;
+      states.push(init.body.state);
+      if (init.body.state === failState) throw new Error('Status response lost');
+      return {};
+    },
+  }), /Status response lost/);
+  assert.deepEqual(states, ['pending', 'gate', failState, 'error']);
+});
+
+test('accepted success with lost response and failed recovery is explicitly unknown', async () => {
+  const data = fixture();
+  const accepted = [];
+  await assert.rejects(reportDescription({
+    ...data,
+    verifyPolicy: async () => accepted.push('gate'),
+    request: async (_url, init) => {
+      if (!init) return data.live;
+      const state = init.body.state;
+      if (state === 'error') throw new Error('Recovery denied');
+      accepted.push(state);
+      if (state === 'success') throw new Error('Response lost after server accepted success');
+      return {};
+    },
+  }), /remote status is unknown/);
+  assert.deepEqual(accepted, ['pending', 'gate', 'success']);
+});
+
+test('change during the final success POST remains a documented non-transactional race', async () => {
+  const data = fixture();
+  let currentBody = goodBody;
+  const result = await reportDescription({
+    ...data,
+    verifyPolicy: async () => assert.equal(currentBody, goodBody),
+    request: async (_url, init) => {
+      if (!init) return { ...data.live, body: currentBody };
+      if (init.body.state === 'success') currentBody = 'TODO';
+      return {};
+    },
+  });
+  assert.equal(result.valid, true);
+  assert.equal(currentBody, 'TODO');
+  // Two matching GETs cannot atomically bind a commit status to mutable PR text.
 });

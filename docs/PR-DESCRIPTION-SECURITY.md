@@ -5,6 +5,69 @@ Tech Lead inspection.** This report supersedes the original delivery architectur
 No tamper-proof or active mandatory enforcement is claimed. PR #6 stays Draft.
 Performance HOLD; production POC NO-GO.
 
+## Final SHA compatibility review — current evidence
+
+Completed 2026-10-24 against P1 baseline `e9f0dbd`. The approved architecture and
+workflow YAML are unchanged. The only reporter corrections are independent SHA
+shape checks instead of an undocumented equality assumption, and accurate
+unknown-remote-status diagnostics after ambiguous publication/recovery failure.
+
+Official documentation distinguishes the event commit (`GITHUB_SHA`) from the
+workflow-file commit (`GITHUB_WORKFLOW_SHA`). The target-event table locates the
+event context on the default branch; the variable/context references do not state
+that both fields must always equal. They also do not define workflow SHA as the
+last commit that changed the YAML. A normal direct main workflow can have equal
+values, and a subsequent main commit does not by itself prove they will differ.
+No actual mismatch on GitHub was observed in this static review. The conservative
+correction removes a redundant, unsupported invariant rather than relying on a
+claimed reproduction of a hosted failure. Source trust continues to rely on exact
+repository/main workflow ref, checkout pinned to workflow SHA, and git HEAD matching
+that SHA. The event SHA is validated but selects neither code nor published status.
+[Variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables),
+[contexts](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context),
+[target events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target).
+
+All six supported actions are tested with equal and distinct valid SHAs. Additional
+regressions cover missing/malformed SHAs, a future main execution context, reruns
+with old event metadata and current bodies/heads, terminal status-write failures,
+accepted-success/lost-response recovery failure, and a body edit during final POST.
+Synthetic differing values test the compatibility contract; they are not evidence
+of a particular SHA selection by GitHub. Reruns keep original event SHA/ref, so do
+not compare either SHA to a live main tip or claim a rerun necessarily executes the
+newest policy. Emit a fresh event after policy updates.
+[GitHub rerun semantics](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
+
+PASS: **157 tests, zero failures**, including all 100 content-policy regressions
+and 57 security/static tests. Exact command with `NODE_OPTIONS=--max-old-space-size=256`:
+
+```text
+node --test --test-concurrency=1 .github/scripts/pr-description.test.mjs .github/scripts/pr-description-reporter.test.mjs
+```
+
+PASS: `node --check` on every `.github/scripts/*.mjs`, `git diff --check` and staged
+whitespace checks. No changes to workflow YAML, permissions, template, canonical
+content policy, parser or local CLI compared with `e9f0dbd`; full PR diff reviewed.
+No installation, Nx, builds, browsers, performance or supervisor verification.
+Hosted execution, protections activation and merge blocking remain NOT RUN.
+
+The independent reporter review found no additional locally fixable critical
+trust-boundary defect. It did reproduce the already documented non-transactional
+window: a body edit during the success POST can leave a success for the previous
+body. Another re-read only moves that window; the commit-status API has no atomic
+condition on PR text. Cancels, delayed events, shared SHAs and unavailable writes
+remain limits. A response can also be lost after success was accepted: when error
+recovery fails, the result is unknown, not proof of no success. The diagnostic now
+says so. These simulations are reasons to retain the BLOCKED activation decision,
+not evidence of tamper-proof enforcement or permission to redesign the architecture.
+
+PR #6 is kept Draft. The latest canonical description (157 tests, SHA correction,
+publication ambiguity and remaining risks) passed the local event CLI. Updating
+PR #6's body again returned connector 403 `Resource not accessible by integration`;
+no metadata changed and no permission workaround was attempted. Use the complete
+manual replacement `_tmp_pr6-final-body.md`; it supersedes the older prepared body.
+Final commit and remote verification are reported in chat. No rules/protections or
+PR #4/#5 changes are authorized or made.
+
 ## Root cause and threat model
 
 The original `pull_request` workflow used merge-ref YAML and default checkout.
@@ -82,7 +145,7 @@ Changed architecture files: `.github/workflows/pr-description.yml`, new
 `.github/scripts/pr-description-reporter.mjs`, new
 `.github/scripts/report-pr-description.mjs`, and `.github/CODEOWNERS`.
 The existing policy test's workflow assertions are updated; new
-`pr-description-reporter.test.mjs` supplies 35 security/unit/static tests.
+`pr-description-reporter.test.mjs` now supplies 57 security/unit/static tests.
 Specification, operational guide, project status and development journal are updated.
 
 The 100 original format/CLI/template regressions remain. The new suite asserts the
@@ -101,7 +164,7 @@ No content-policy relaxation: `.github/scripts/pr-description-policy.mjs`,
 and `.github/pull_request_template.md` are unchanged from `477bf5f`. Exact headings,
 order, placeholder and PASS/FAIL/NOT RUN rules remain in effect.
 
-## Actual verification
+## Actual verification — historical P1 baseline
 
 PASS on 2026-10-24 with `NODE_OPTIONS=--max-old-space-size=256`, from the PR worktree:
 
@@ -113,7 +176,7 @@ node --check .github/scripts/pr-description-reporter.test.mjs
 git diff --check
 ```
 
-Final local suite: **135 tests passed, zero failed**. First combined run was
+P1 baseline suite: **135 tests passed, zero failed**. First combined run was
 133/134 because an old unanchored `uses:` counter also matched `statuses:`; corrected
 it to recognize actual YAML action steps, reran successfully, and added a runner
 guard test. These results do not include hosted status writes.

@@ -1,6 +1,32 @@
 # DataGrid project status
 
+## PR #6 final SHA compatibility review — 2026-10-24
+
+Verified official GitHub variable/event/context/rerun documentation. It defines
+event SHA and workflow-file SHA separately without a universal equality promise;
+no actual hosted mismatch observed or claim that ordinary main commits must
+produce one. Replaced equality with independent SHA validation, retaining exact
+trusted main workflow ref and checkout HEAD == workflow SHA. Workflow YAML,
+permissions, head-SHA status publication and canonical policy are unchanged.
+
+PASS: 157 dependency-free serial tests, all JS syntax checks and Git whitespace
+checks. Coverage includes all six actions with equal/different SHA metadata,
+future-main/rerun cases, stale head/body and status-write failure interleavings.
+Corrected misleading no-success diagnostic: accepted success with lost response
+and failed recovery leaves remote state unknown. Reproduced documented body-edit
+during final POST race; status/text writes are not transactional. No additional
+locally fixable critical defect found; no architecture expansion undertaken.
+
+**BLOCKED** for trusted bootstrap/activation and actual merge enforcement; hosted
+behavior remains unverified. Full evidence and limitations:
+[security report](PR-DESCRIPTION-SECURITY.md). PR #6 stays Draft; no rules/settings,
+PR #4/#5, dependency or prohibited workload changes. Performance HOLD; POC NO-GO.
+Latest PR-body update returned connector 403; complete canonical manual body with
+157-test evidence is saved as `_tmp_pr6-final-body.md` and passes the local CLI.
+
 ## PR #6 trust-boundary hardening — 2026-10-24
+
+Historical P1 checkpoint; latest verification is the SHA review above.
 
 P1 finding confirmed: PR merge-ref YAML and scripts could certify themselves.
 Implemented main-selected pull_request_target workflow, pinned trusted workflow

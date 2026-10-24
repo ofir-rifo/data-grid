@@ -15,7 +15,10 @@ export function trustedContext(event, env) {
   requireCondition(env.GITHUB_REPOSITORY === repository, 'Unexpected workflow repository.');
   requireCondition(env.GITHUB_WORKFLOW_REF === `${repository}/.github/workflows/pr-description.yml@refs/heads/main`, 'Expected the trusted main workflow definition.');
   requireCondition(shaPattern.test(env.GITHUB_WORKFLOW_SHA ?? ''), 'Missing trusted workflow SHA.');
-  requireCondition(env.GITHUB_SHA === env.GITHUB_WORKFLOW_SHA && env.GITHUB_REF === 'refs/heads/main', 'Workflow revision must match the default main execution context.');
+  // GitHub defines event and workflow SHAs separately; equality is not a documented
+  // trust guarantee. Source is pinned to workflow SHA and checked by the runner.
+  requireCondition(shaPattern.test(env.GITHUB_SHA ?? ''), 'Invalid event SHA.');
+  requireCondition(env.GITHUB_REF === 'refs/heads/main', 'Expected the default main execution ref.');
   requireCondition(/^\d+$/.test(env.GITHUB_RUN_ID ?? ''), 'Invalid workflow run ID.');
   requireCondition(actions.includes(event?.action), 'Unsupported PR event action.');
   requireCondition(event?.repository?.full_name === repository && event.repository.default_branch === 'main', 'Unexpected event repository/default branch.');
@@ -68,7 +71,7 @@ export async function reportDescription({ event, env, request, verifyPolicy }) {
     try {
       await publish('error', 'Trusted validation could not complete; inspect the failed run.');
     } catch {
-      throw new Error('Trusted validation/status publication failed; no success was certified. Check API permissions and the run.');
+      throw new Error('Trusted validation/status publication failed; remote status is unknown. Inspect the run and commit status.');
     }
     throw error;
   }

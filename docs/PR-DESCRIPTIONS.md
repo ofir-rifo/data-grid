@@ -62,6 +62,13 @@ repository at `github.workflow_sha`. PR branches, merge refs, artifacts and code
 are never loaded. A PR deleting or replacing its own workflow/validator does not
 alter this trusted main-selected run after deployment.
 
+`GITHUB_SHA` and `GITHUB_WORKFLOW_SHA` have separate documented roles; both must be
+valid SHAs, but equality is not required. The runner still verifies checkout HEAD
+against workflow SHA. No SHA is assumed to mean the last commit that edited the
+YAML. An old rerun preserves original event metadata and may use an older trusted
+policy: trigger a fresh event after policy deployment. Current SHA review and
+157-test results are in the security report.
+
 The reporter posts **PR description** as a commit status on the PR's event head
 SHA. The separate native job is **Trusted description reporter**; do not select
 its default-branch job context as the head status. Job permissions are

@@ -19,6 +19,26 @@ disable credential persistence and package-manager caching, use pinned actions.
 No installation, build, cache restore/save or untrusted execution is allowed.
 This is an independently justified use of pull_request_target for metadata policy.
 
+### SHA compatibility contract — final static review
+
+GITHUB_SHA is event-dependent; GitHub's target-event table places it on the default
+branch. GITHUB_WORKFLOW_SHA identifies the workflow-file revision. Official docs
+define their roles separately and do not promise equality for all executions.
+Do not assume the workflow SHA is the last commit that edited the YAML, or claim
+that an ordinary later main commit necessarily produces unequal values. No actual
+hosted mismatch has been observed here. As a conservative compatibility decision,
+validate both SHA shapes independently rather than requiring equality. Trusted
+selection remains the exact repository/main workflow ref plus immutable checkout
+at workflow SHA and a matching git HEAD. GITHUB_SHA selects neither executable
+source nor status target. New main events and old reruns must preserve those rules.
+Reruns preserve original event SHA/ref; they need not use today's main tip or policy.
+Use a fresh supported event after policy deployment, not a historical rerun, to
+verify the newly deployed policy.
+
+References: [variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables),
+[target events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target),
+[reruns](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
+
 Publish `PR description` as a commit status on the event's PR head SHA. A native
 target-workflow job runs in the default-branch SHA context, so do not rely on its
 job name alone for a head-specific merge decision. Only the reporter receives the
@@ -37,6 +57,9 @@ validate its real body using the unchanged policy, and re-read before success.
 Changed snapshot/head or gate/API failure must never publish success. Publish
 failure/error for a known event head where API access allows, exit nonzero and log
 escaped actionable errors. All requests have timeouts and reject redirects.
+If a success write's response is lost and error publication also fails, the remote
+status is unknown; a failed local job cannot prove GitHub did not accept success.
+Diagnostics must state that ambiguity rather than certify the absence of success.
 Do not fetch source code or execute body content. Ordinary, Draft and fork PRs
 targeting main use the same path. An event lagging a newer head fails on the old
 head, never certifies the new one. Old reruns re-read the current PR rather than

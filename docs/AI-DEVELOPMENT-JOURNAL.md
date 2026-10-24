@@ -1,5 +1,31 @@
 # AI development journal
 
+## 2026-10-24 — PR #6 final SHA compatibility review
+
+Read official GitHub variables, contexts, target-event and rerun docs. Separate
+event/workflow SHA definitions do not promise universal equality; no hosted
+mismatch observed. Removed that assumption while validating both SHA shapes and
+preserving trusted workflow ref, pinned workflow checkout and git HEAD equality.
+No workflow YAML, permissions, canonical policy/parser/template/local CLI changes.
+
+PASS: 157 bounded dependency-free tests plus JS syntax and whitespace checks.
+New tests cover all six event actions with equal/different valid SHAs, malformed
+metadata, future main contexts, old reruns/current heads, final publication errors
+and accepted-success/lost-response ambiguity. Corrected the diagnostic to remote
+state unknown when recovery also fails. Reproduced existing body-edit-at-POST race;
+additional reads cannot make the commit-status API transactional with PR text.
+No additional locally fixable critical issue found. Full diff independently
+self-reviewed; not a substitute for Tech Lead acceptance or hosted verification.
+
+Kept approved architecture and documented old-policy rerun risk and bootstrap
+limits. Prepared updated canonical PR #6 description with current test count.
+No dependencies, Windows settings, protections, PR #4/#5 or heavy workloads touched.
+Keep Draft; BLOCKED for deployment/enforcement assurance. Performance HOLD; POC NO-GO.
+
+Latest canonical body passed the unchanged event CLI. Body-only update of PR #6
+returned connector 403 Resource not accessible by integration; saved complete
+manual replacement `_tmp_pr6-final-body.md`. No alternate credentials or bypass.
+
 ## 2026-10-24 — PR #6 P1 trust-boundary correction
 
 Audited merge-ref workflow and script trust, event metadata, head-vs-default SHA
