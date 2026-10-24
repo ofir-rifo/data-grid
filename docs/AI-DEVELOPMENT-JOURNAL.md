@@ -1,5 +1,35 @@
 # AI development journal
 
+## 2026-10-24 — PR #5 review remediation
+
+Rechecked the clean isolated feature worktree and GitHub PR base/head/Draft state.
+Audited all 28 changed paths, Core math and invariants, identity/data access,
+geometry, React rendering, test assertions, Nx/package boundary and documentation.
+Confirmed the known ARIA defect against the WAI-ARIA increasing-column-index
+requirement. The default first/last pin preset masked arbitrary interleaved pins.
+Specified separate original and visual positions before changing Core metadata;
+stable IDs were preserved. No mounted-window renumbering or ID substitution.
+
+Other demonstrated defects: headers persisted in zero-width pinned regions while
+cells disappeared; no-column/unmeasured layouts emitted empty semantic rows;
+high-frequency `<output>` carried an implicit status role; inherited RTL conflicted
+with LTR-only scroll coordinates; sparse column arrays silently skipped entries.
+Updated the specification first, then fixed each with deterministic regressions.
+Extracted a small stateless CoreTable to exercise actual header/cell markup with
+interleaved pins and string row data. Core remains framework-independent.
+
+11 Core, 47 Playground and 9 policy tests passed serially. Focused React tests
+cover 7 cases and are included in the 47, not additional to them. Core/app
+typechecks and standards passed (0 errors, 9 pre-existing diagnostic warnings).
+Used installed Nx directly due the earlier pnpm discovery side effect; no
+dependency operation occurred in this remediation. Supervisor chat remained idle.
+No browser, Playwright execution, build, dev server, benchmark, performance or
+supervisor verification. DOM semantics are unit evidence, not AT/native layout
+acceptance. The canonical five-section PR text follows the separate description
+policy's published template headings, inspected read-only; none of that branch's
+unmerged implementation was imported. Publication and exact diff are recorded in
+the delivery report. Performance HOLD; production POC NO-GO.
+
 ## 2026-10-24 — isolated Grid Core foundation (PR #5)
 
 Read principles/status/standards and Nx skills before implementation. Inspected

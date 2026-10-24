@@ -19,6 +19,63 @@ function columns(widths: readonly number[]): ColumnDefinition<number>[] {
 const viewport = { width: 20, height: 20, scrollLeft: 0, scrollTop: 0 };
 
 describe('Grid Core contracts', () => {
+  it('separates stable column identity, source index and full visual position', () => {
+    const defs = columns([10, 20, 30, 40, 50, 60]);
+    defs[0] = { ...defs[0], pinned: 'right' };
+    defs[2] = { ...defs[2], pinned: 'left' };
+    const geometry = createGridGeometry({
+      rowCount: 2,
+      rowHeight: 10,
+      columns: defs,
+    });
+    const ordered = [
+      ...geometry.regions.left,
+      ...geometry.regions.center,
+      ...geometry.regions.right,
+    ];
+    expect(
+      ordered.map(({ id, logicalIndex, visualIndex }) => ({
+        id,
+        logicalIndex,
+        visualIndex,
+      })),
+    ).toEqual([
+      { id: 'c2', logicalIndex: 2, visualIndex: 0 },
+      { id: 'c1', logicalIndex: 1, visualIndex: 1 },
+      { id: 'c3', logicalIndex: 3, visualIndex: 2 },
+      { id: 'c4', logicalIndex: 4, visualIndex: 3 },
+      { id: 'c5', logicalIndex: 5, visualIndex: 4 },
+      { id: 'c0', logicalIndex: 0, visualIndex: 5 },
+    ]);
+    const repinned = createGridGeometry({
+      rowCount: 2,
+      rowHeight: 10,
+      columns: defs.map((column) => ({ ...column, pinned: undefined })),
+    });
+    expect(repinned.regions.center.map(({ id }) => id)).toEqual(
+      defs.map(({ id }) => id),
+    );
+    expect(repinned.regions.center[0]).toMatchObject({
+      id: 'c0',
+      logicalIndex: 0,
+      visualIndex: 0,
+    });
+    expect(geometry.regions.right[0]).toMatchObject({
+      id: 'c0',
+      logicalIndex: 0,
+      visualIndex: 5,
+    });
+    expect(Object.isFrozen(geometry.regions.right[0])).toBe(true);
+  });
+
+  it('rejects missing column definitions instead of silently dropping source positions', () => {
+    const sparse = new Array<ColumnDefinition<number>>(2);
+    sparse[1] = columns([10])[0];
+    expect(() =>
+      createGridGeometry({ rowCount: 0, rowHeight: 10, columns: sparse }),
+    ).toThrow(/columns\[0\]/);
+  });
+
   it('uses exact half-open edges and interior intersections', () => {
     const geometry = createGridGeometry({
       rowCount: 10,

@@ -23,8 +23,13 @@ stable across reorder/replacement, supplied by the consumer. `getRow` validates
 the requested index and returned key, but cannot detect global duplicate keys
 without an O(rows) scan, which is explicitly excluded. Column IDs are nonempty
 unique strings, checked at layout creation. Neither row positions nor column
-positions are identities. Column logical indices preserve original input order;
-visual region order is left, center, right, preserving order within each region.
+positions are identities. `logicalIndex` preserves the original input position;
+it is not an accessibility position or a stable identity. `visualIndex` is the
+zero-based position across the complete left, center, right sequence, preserving
+input order within each region. It is assigned during geometry construction and
+can change on repinning/reordering; column `id` remains the stable identity.
+Sparse column arrays (missing definitions) are rejected with RangeError rather
+than silently dropping positions.
 
 `createGridGeometry({rowCount,rowHeight,columns})` snapshots column metadata and
 accessors, computes offsets within each region, and returns immutable geometry.
@@ -62,7 +67,8 @@ clamp to content. Zero viewport extent returns [0,0) on that axis regardless of
 overscan. Zero center width produces empty center ranges. Zero width or height
 prevents cells on that axis; independent ranges may still describe the other
 axis. Empty counts return [0,0). Visible ranges exclude overscan. Renderer uses
-one row render range across all regions and original logical indices for ARIA.
+one row render range across all regions. ARIA uses `visualIndex + 1`, including
+gaps for unmounted center columns; it never renumbers just the mounted window.
 
 `GridWindow` returns clamped scroll offsets, maximum offsets, region rectangles,
 row visible/render ranges, and center-column visible/render ranges. Column
@@ -100,7 +106,17 @@ one logical row across regions, expose total counts and 1-based logical indices,
 preserve focus across virtual lifetimes and implement the approved keyboard model.
 The inspection demo is a read-only ARIA table with keyboard-scrollable viewport,
 not an interactive grid or an accessibility acceptance claim. Region cells share
-one row; headers follow visual region order, with original logical aria-colindex.
+one row. Both headers and cells follow visual order and use `visualIndex + 1`
+for aria-colindex. The complete column count includes unmounted columns. This
+matches [WAI-ARIA's increasing-index contract](https://www.w3.org/TR/wai-aria-1.2/#aria-colindex).
+Zero-width regions mount neither headers nor cells; zero body height mounts no
+data rows, but the independently visible header may remain. No-column layouts
+show an empty-state message instead of an empty ARIA row/table. An unmeasured or
+zero-width viewport also exposes no empty table/rows. Header-only
+empty-data tables are allowed when columns exist. Buffered rows/cells may remain
+mounted beyond the visible window; screen-reader acceptance remains pending.
+Scroll diagnostics are ordinary text, not a live status announcement on every
+scroll update. The scroll canvas is explicitly LTR to match Core coordinates.
 No sorting, filtering, selection, editing, grouping, variable-height rows,
 fetching, full plugin system or production navigation in this milestone.
 

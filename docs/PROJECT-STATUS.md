@@ -1,5 +1,29 @@
 # DataGrid project status
 
+## PR #5 review remediation — 2026-10-24
+
+Audited the full 28-file PR at `369a878` against main `27b4f16`, then remediated
+in the existing isolated `feature/grid-core` worktree. PR #5 is open and Draft:
+https://github.com/ofir-rifo/data-grid/pull/5. No PR #4 or other worktree changes.
+
+Core now distinguishes stable column IDs, original `logicalIndex` and full-table
+`visualIndex`. React uses increasing visual ARIA positions, including gaps for
+virtualized columns. Sparse column arrays fail with RangeError. Fixed geometry,
+binary-search windows, pinned offsets and row identity contracts remain intact.
+
+Extracted the stateless inspection `CoreTable` to test interleaved pinning with
+actual React markup. Zero-width regions omit both headers/cells; no-column and
+unmeasured layouts expose no empty table rows. LTR is explicit; scrolling debug
+text is no longer an implicit live status. The default POC is unchanged.
+
+Current bounded results: 11 Core tests PASS; 47 Playground tests PASS (including
+7 new focused jsdom tests); 9 policy tests PASS; both typechecks PASS; standards
+PASS with 0 errors/9 existing warnings; whitespace PASS. Browser, Playwright,
+build, server, benchmark, performance and supervisor execution NOT RUN. No new
+dependency installation/update or pnpm fetching attempt during remediation.
+See [remediation report](GRID-CORE-REMEDIATION.md) for commands, scope and risks.
+Earlier results below are historical. Performance HOLD; production POC NO-GO.
+
 ## Grid Core PR #5 milestone — 2026-10-24
 
 Authorized scope: framework-independent geometry/data foundation and React

@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  calculateGridWindow,
-  createGridGeometry,
-  getRow,
-} from '@org/grid-core';
-import type { ColumnDefinition, ColumnRegion, RowSource } from '@org/grid-core';
+import { calculateGridWindow, createGridGeometry } from '@org/grid-core';
+import type { ColumnDefinition, RowSource } from '@org/grid-core';
 import styles from './CoreDemo.module.scss';
+import CoreTable, { getRenderedCellCount } from './CoreTable';
 
 const ROW_HEIGHT = 32;
 const CANVAS_CAP = 1_000_000;
-const REGIONS: readonly ColumnRegion[] = ['left', 'center', 'right'];
 
 function createModel(rowCount: number, columnCount: number, pinned: boolean) {
   const columns: ColumnDefinition<number>[] = Array.from(
@@ -111,26 +107,7 @@ export default function CoreDemo() {
     getRow: (index) => index,
     getRowId: (row) => `r${row}`,
   };
-  const rows = Array.from(
-    { length: window.rows.end - window.rows.start },
-    (_, i) => getRow(source, window.rows.start + i),
-  );
-  const centerColumns = geometry.regions.center.slice(
-    window.centerColumns.start,
-    window.centerColumns.end,
-  );
-  const columns = {
-    left: geometry.regions.left,
-    center: centerColumns,
-    right: geometry.regions.right,
-  };
-  const cellCount =
-    rows.length *
-    REGIONS.reduce(
-      (sum, region) =>
-        sum + (window.regions[region].width > 0 ? columns[region].length : 0),
-      0,
-    );
+  const cellCount = getRenderedCellCount(geometry, window);
 
   function configure(rowCount: number, columnCount: number, pinned: boolean) {
     setModel(createModel(rowCount, columnCount, pinned));
@@ -205,7 +182,7 @@ export default function CoreDemo() {
         Focus the scroll area and use native arrow/Page keys. This read-only
         table has no cell navigation or editing.
       </p>
-      <div className={styles['stage']}>
+      <div className={styles['stage']} dir="ltr">
         <div
           className={styles['scrollport']}
           ref={scrollport}
@@ -232,116 +209,14 @@ export default function CoreDemo() {
             }}
           />
         </div>
-        <div
-          role="table"
-          aria-label="Core virtual table"
-          aria-rowcount={model.rowCount + 1}
-          aria-colcount={model.columnCount}
-          className={styles['table']}
-          style={{
-            width: viewport.width,
-            height: viewport.height + ROW_HEIGHT,
-          }}
-          data-testid="core-table"
-          data-row-start={window.rows.start}
-          data-row-end={window.rows.end}
-          data-column-start={window.centerColumns.start}
-          data-column-end={window.centerColumns.end}
-          data-cell-count={cellCount}
-        >
-          <div
-            role="row"
-            aria-rowindex={1}
-            className={styles['row']}
-            style={{ top: 0, height: ROW_HEIGHT }}
-          >
-            {REGIONS.map((region) => (
-              <div
-                role="presentation"
-                key={region}
-                className={styles['region']}
-                style={{
-                  left: window.regions[region].x,
-                  width: window.regions[region].width,
-                  height: ROW_HEIGHT,
-                }}
-              >
-                {columns[region].map((column) => (
-                  <div
-                    role="columnheader"
-                    aria-colindex={column.logicalIndex + 1}
-                    key={column.id}
-                    className={styles['header']}
-                    style={{
-                      left:
-                        column.offset -
-                        (region === 'center' ? window.scrollLeft : 0),
-                      width: column.width,
-                      height: ROW_HEIGHT,
-                    }}
-                  >
-                    {column.header}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div
-            role="rowgroup"
-            className={styles['body']}
-            style={{ top: ROW_HEIGHT, height: viewport.height }}
-          >
-            {rows.map(({ row, id }) => (
-              <div
-                role="row"
-                aria-rowindex={row + 2}
-                key={id}
-                data-row-id={id}
-                className={styles['row']}
-                style={{
-                  top: row * ROW_HEIGHT - window.scrollTop,
-                  height: ROW_HEIGHT,
-                }}
-              >
-                {REGIONS.map((region) => (
-                  <div
-                    role="presentation"
-                    key={region}
-                    className={styles['region']}
-                    style={{
-                      left: window.regions[region].x,
-                      width: window.regions[region].width,
-                      height: ROW_HEIGHT,
-                    }}
-                  >
-                    {window.regions[region].width > 0 &&
-                      columns[region].map((column) => (
-                        <div
-                          role="cell"
-                          aria-colindex={column.logicalIndex + 1}
-                          key={column.id}
-                          data-column-id={column.id}
-                          data-region={region}
-                          className={styles['cell']}
-                          style={{
-                            left:
-                              column.offset -
-                              (region === 'center' ? window.scrollLeft : 0),
-                            width: column.width,
-                            height: ROW_HEIGHT,
-                          }}
-                        >
-                          {String(column.getValue(row))}
-                        </div>
-                      ))}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <CoreTable
+          geometry={geometry}
+          window={window}
+          viewport={viewport}
+          source={source}
+        />
       </div>
-      <output className={styles['debug']} data-testid="core-debug">
+      <div className={styles['debug']} data-testid="core-debug">
         Visible rows [{window.visibleRows.start}, {window.visibleRows.end});
         render rows [{window.rows.start}, {window.rows.end}); center columns [
         {window.visibleCenterColumns.start}, {window.visibleCenterColumns.end});
@@ -355,7 +230,7 @@ export default function CoreDemo() {
         Physical canvas capped at {CANVAS_CAP}px per scrolling axis.
         Proportional mapping loses native pixel precision at large extents.
         Runtime performance and browser behavior unverified.
-      </output>
+      </div>
       {model.rowCount === 0 || model.columnCount === 0 ? (
         <p>No cells: select nonzero rows and columns.</p>
       ) : null}

@@ -19,7 +19,10 @@ export interface ColumnLayout<T> {
   readonly header: string;
   readonly width: number;
   readonly offset: number;
+  /** Original caller-supplied array position; not an ARIA column index. */
   readonly logicalIndex: number;
+  /** Position in the complete left/center/right sequence, independent of identity. */
+  readonly visualIndex: number;
   readonly region: ColumnRegion;
   readonly getValue: (row: T) => unknown;
 }
@@ -111,14 +114,25 @@ export function createGridGeometry<T>(config: {
       'rowHeight below representable resolution at content extent',
     );
   }
-  const regions: Record<ColumnRegion, ColumnLayout<T>[]> = {
-    left: [],
-    center: [],
-    right: [],
-  };
+  const regions: Record<ColumnRegion, Omit<ColumnLayout<T>, 'visualIndex'>[]> =
+    {
+      left: [],
+      center: [],
+      right: [],
+    };
   const widths = { left: 0, center: 0, right: 0 };
   const ids = new Set<string>();
-  config.columns.forEach((column, logicalIndex) => {
+  for (
+    let logicalIndex = 0;
+    logicalIndex < config.columns.length;
+    logicalIndex++
+  ) {
+    const column = config.columns[logicalIndex];
+    if (column === undefined) {
+      throw new RangeError(
+        `columns[${logicalIndex}] must contain a definition`,
+      );
+    }
     key(column.id, 'column.id');
     if (ids.has(column.id))
       throw new RangeError(`duplicate column.id: ${column.id}`);
@@ -136,20 +150,26 @@ export function createGridGeometry<T>(config: {
     const end = extent(offset + column.width, 'region.width');
     if (end <= offset)
       throw new RangeError('column.width must advance region extent');
-    regions[region].push(
-      Object.freeze({
-        id: column.id,
-        header: column.header,
-        width: column.width,
-        offset,
-        logicalIndex,
-        region,
-        getValue: column.getValue,
-      }),
-    );
+    regions[region].push({
+      id: column.id,
+      header: column.header,
+      width: column.width,
+      offset,
+      logicalIndex,
+      region,
+      getValue: column.getValue,
+    });
     widths[region] = end;
-  });
+  }
   const width = extent(widths.left + widths.center + widths.right, 'width');
+  let visualIndex = 0;
+  function finalize(region: ColumnRegion): readonly ColumnLayout<T>[] {
+    return Object.freeze(
+      regions[region].map((column) =>
+        Object.freeze({ ...column, visualIndex: visualIndex++ }),
+      ),
+    );
+  }
   return Object.freeze({
     rowCount: config.rowCount,
     rowHeight: config.rowHeight,
@@ -157,9 +177,9 @@ export function createGridGeometry<T>(config: {
     width,
     widths: Object.freeze(widths),
     regions: Object.freeze({
-      left: Object.freeze(regions.left),
-      center: Object.freeze(regions.center),
-      right: Object.freeze(regions.right),
+      left: finalize('left'),
+      center: finalize('center'),
+      right: finalize('right'),
     }),
   });
 }

@@ -42,5 +42,11 @@ Region offsets are local. A renderer applies center scrolling only to center
 columns and applies the shared row scroll to all regions. Pinned overflow uses
 left-first clipping. Keyboard/focus/ARIA and browser measurement belong to adapters.
 
+Column `id` is identity. `logicalIndex` is the original input position, while
+`visualIndex` is the position in the complete left/center/right order. Adapters
+use `visualIndex + 1` for ARIA columns and retain gaps for unmounted columns.
+Repinning/reordering can change positions without changing IDs. Sparse column
+arrays are rejected instead of silently omitting definitions.
+
 The inspection demo is at `/?demo=core`; launch instructions require separate
 server/browser authorization under the current machine restrictions.

@@ -1,5 +1,9 @@
 # Grid Core V1 review record — 2026-10-24
 
+Current PR #5 review remediation and updated test results are recorded in
+[GRID-CORE-REMEDIATION.md](GRID-CORE-REMEDIATION.md). The A–J record below describes
+the initial `369a878` delivery and its historical test scope.
+
 ## A. Status
 
 READY FOR FINAL TECH LEAD REVIEW of the foundation implementation. Browser,
