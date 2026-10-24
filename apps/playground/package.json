@@ -2,6 +2,9 @@
   "name": "@org/playground",
   "version": "0.0.1",
   "private": true,
+  "dependencies": {
+    "@org/grid-core": "workspace:*"
+  },
   "nx": {
     "targets": {
       "standards": {

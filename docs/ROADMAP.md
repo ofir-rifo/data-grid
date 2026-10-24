@@ -79,3 +79,13 @@ Next recommendation: review PR #3's correctness evidence and NO-GO/pending exit
 recommendation, then approve an explicitly supervised hosted evidence stage and
 the remaining browser/scaling decisions. There is no production implementation
 task or heavy workload approved by this roadmap.
+
+# Grid Core foundation update — 2026-10-24
+
+PR #5 implements the explicitly authorized pure Core foundation and isolated
+React inspection demo; see [Grid Core V1](../specs/features/GRID-CORE-V1.md).
+Next milestones: independent architecture review, separately authorized browser
+correctness/assistive-technology checks, production React navigation/focus,
+then evidence-led scrolling/scheduling and logical-height segmentation design.
+Sorting/filtering, selection/editing, variable heights and plugin infrastructure
+remain future specified work. Performance HOLD; production POC NO-GO.

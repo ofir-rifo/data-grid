@@ -1,7 +1,12 @@
 import VirtualGrid from './virtualization/VirtualGrid';
+import CoreDemo from './core-demo/CoreDemo';
 
 export function App() {
-  return <VirtualGrid />;
+  return new URLSearchParams(window.location.search).get('demo') === 'core' ? (
+    <CoreDemo />
+  ) : (
+    <VirtualGrid />
+  );
 }
 
 export default App;

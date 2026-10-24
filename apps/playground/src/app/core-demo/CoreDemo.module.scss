@@ -1,0 +1,135 @@
+.demo {
+  padding: 20px;
+  color: var(--core-text, #172337);
+  font-family: system-ui, sans-serif;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-block: 16px;
+}
+
+.stage {
+  position: relative;
+  border: 1px solid var(--core-border, #8797ad);
+}
+
+.scrollport {
+  height: 460px;
+  overflow: auto;
+
+  &:focus-visible {
+    outline: 3px solid #245bd6;
+    outline-offset: 2px;
+  }
+}
+
+.table {
+  position: sticky;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  overflow: clip;
+  pointer-events: auto;
+}
+
+.body {
+  position: absolute;
+  width: 100%;
+  overflow: clip;
+}
+
+.row {
+  position: absolute;
+  width: 100%;
+}
+
+.region {
+  position: absolute;
+  z-index: 0;
+  isolation: isolate;
+  overflow: clip;
+  background: var(--core-surface, var(--core-cell, #fff));
+}
+
+.pinnedRegion {
+  z-index: 1;
+}
+
+.region[data-pinned-shadow~='left']::before,
+.region[data-pinned-shadow~='right']::after {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  width: 1px;
+  opacity: var(--core-pinned-shadow-opacity, 0.18);
+  pointer-events: none;
+  content: '';
+}
+
+.region[data-pinned-shadow~='left']::before {
+  inset-inline-start: -1px;
+  box-shadow: var(
+    --core-pinned-shadow-left,
+    var(--core-pinned-shadow-offset, 2px) 0 var(--core-pinned-shadow-blur, 6px)
+      var(--core-pinned-shadow-spread, 0px)
+      var(--core-pinned-shadow-color, var(--core-text, #172337))
+  );
+}
+
+.region[data-pinned-shadow~='right']::after {
+  inset-inline-end: -1px;
+  box-shadow: var(
+    --core-pinned-shadow-right,
+    calc(-1 * var(--core-pinned-shadow-offset, 2px)) 0
+      var(--core-pinned-shadow-blur, 6px) var(--core-pinned-shadow-spread, 0px)
+      var(--core-pinned-shadow-color, var(--core-text, #172337))
+  );
+}
+
+.leftBoundary::after,
+.rightBoundary::after {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  width: 1px;
+  background: var(--core-pinned-separator, var(--core-border, #ccd4df));
+  pointer-events: none;
+  content: '';
+}
+
+.leftBoundary::after {
+  inset-inline-end: 0;
+}
+
+.rightBoundary::after {
+  inset-inline-start: 0;
+}
+
+.cell,
+.header {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: clip;
+  padding: 6px 8px;
+  border-inline-end: 1px solid transparent;
+  border-bottom: 1px solid var(--core-border, #ccd4df);
+  background: var(--core-cell, #fff);
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.header {
+  background: var(--core-header, #e7edf6);
+  font-weight: 600;
+}
+
+.debug {
+  display: block;
+  margin-block: 16px;
+  line-height: 1.6;
+  font-family: monospace;
+}

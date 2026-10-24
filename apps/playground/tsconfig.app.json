@@ -15,6 +15,7 @@
     "module": "esnext",
     "moduleResolution": "bundler"
   },
+  "references": [{ "path": "../../packages/grid-core/tsconfig.lib.json" }],
   "exclude": [
     "out-tsc",
     "dist",

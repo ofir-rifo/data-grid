@@ -1,5 +1,179 @@
 # AI development journal
 
+## 2026-10-24 — PR #5 inherited shadow styling contract
+
+Inspected clean isolated head 863f563. Updated feature specs and architecture
+first with centerward shadow conditions, defaults, consumer examples and browser
+acceptance limits. Kept existing custom-property theme architecture: no React
+props, extra DOM, global CSS, dependency or Core change. Pure renderer helper
+reads clamped window/pin visibility; center-region edge pseudo-elements avoid
+escaping pinned clipping and cannot intercept input or affect layout. Existing
+separators remain the sole solid-line owners; vertical centering stays intact.
+
+Added 12 pure visibility cases, 2 LTR/RTL-host DOM/token cases and 2 compiled-SCSS
+direction/token/disabled/pointer/layout cases. 81 Playground tests and 9 policy
+tests passed. Source checks/Core/final SHA and GitHub evidence are in the delivery
+report. Updated browser regression source for center decoration and inherited
+`none`/opacity overrides; NOT RUN. Static assertions do not establish real CSS
+inheritance/compositing or contrast. PR #4 remains on its static-only handle
+review, inspected read-only before checks; no native runtime verification here.
+No builds/servers, browsers, benchmarks/performance or supervisor work. No test
+failure or weakened assertion. Independent browser/AT/review acceptance remains
+required. Performance HOLD; Production POC NO-GO; keep PR #5 Draft/unmerged.
+
+## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
+
+NOT MERGE READY. The user's second reference explicitly requires visible vertical
+rules only at pinned boundaries. This supersedes the earlier ordinary internal
+vertical-divider contract. Cells and headers now reserve transparent trailing
+borders, retaining width/padding and content-box geometry. Horizontal row rules
+and the stage frame remain visible. Removed per-cell suppression attributes and
+the now-unnecessary paint helper; pure owner selection, clipping/opaque surfaces
+and stacking stay. Body and headers share flex vertical centering with horizontal
+start alignment. Core, identity, ARIA and native scroll/hit testing are unchanged.
+
+The initial screenshot showed a center divider outside the one-pixel seam band.
+An intermediate clipped-adjacency design passed 69 tests before the user clarified
+that ordinary vertical borders should be absent. It was simplified before commit.
+Final checks: 65 Playground tests, 11 Core tests, both typechecks, 9 policy tests
+and standards PASS (0 errors/9 existing warnings). Replaced only obsolete per-cell
+suppression expectations with unconditional transparent vertical-border checks;
+retained owner, fractional-scroll, hit-testing, identity and ARIA regressions.
+No executed check failed. Browser source updated/typechecked but NOT RUN.
+No local browser/build/server, benchmark/performance or supervisor execution.
+PR #4's current task explicitly prohibits native verification; other worktrees
+and dependencies untouched. Final SHA, remote checks and canonical description
+outcome are in delivery artifacts. User screenshots are pre-fix evidence, not
+proof of corrected pixels. Actual glyph alignment, native scroll/Picker/AT and
+independent browser/review acceptance remain missing. Keep PR #5 Draft/unmerged.
+Performance HOLD. Production POC NO-GO. Earlier sections are historical.
+
+## 2026-10-24 — PR #5 single-owner seams and authorized main integration
+
+The latest request authorizes resolving main integration. Integrated `4f207d1`
+(PR #6) into the isolated feature branch with normal merge commit `05d6ad4`.
+Resolved only journal add/add and project-status conflicts, retaining both
+histories; trusted description-policy files match main. Main and other branches
+were untouched. All 157 canonical parser/reporter/security tests passed.
+
+Source inspection explains the newly reported duplicate: a clipped center-cell
+trailing border can survive just inside its clip edge beside the pinned line.
+The previous left boundary also relied on a cell border. Browser paint was not
+reproduced. Updated feature/architecture specs first, then added pure renderer
+interval helpers and matching header/body attributes: only a pinned region owns
+each seam; overlapping cell-border color is transparent without changing layout.
+Reserved bands handle fractional scrolling; internal borders outside them stay.
+Clipped isolated regions have opaque theme backing and explicit stacking. No
+extra DOM, dependency, Core change or synthetic input handling. Preserved native
+scroll ancestry, accessible canvas and pointer-events:auto. Both host directions
+are tested under the explicit LTR contract; native RTL grid support stays deferred.
+
+All checks passed on first execution this turn: Core 11, Playground 65 (14 new
+cases), engineering policy 9, both typechecks, standards with 0 errors/9 existing
+warnings, and whitespace checks. New bounded browser source is typechecked but
+NOT RUN. No browser, builds, servers, performance or supervisor workload ran
+locally. No existing assertion was removed to obtain a pass. Exact final SHA,
+remote CI and description-update outcome belong to the delivery report.
+
+Self-review: framework independence, identity/ARIA ordering, virtualization and
+row-source contracts unchanged; seam work is O(1) per rendered cell. Remaining
+risks are real-browser pixels/sticky scrolling/Picker/AT, opaque theme-surface
+requirements and independent acceptance. NOT MERGE READY. Performance HOLD;
+Production POC NO-GO. Earlier entries below are historical.
+
+## 2026-10-24 — PR #5 separator, targeting and merge-readiness preparation
+
+Rechecked PR #5, latest main, PR #6 and all PR #5 review/comment endpoints. Created
+a separate checkout of the existing feature branch because the former worktree
+was in use by `test/pr-description-validation`. No other checkout was changed.
+PR #6 is merged at main `4f207d1`; its canonical policy and trusted-workflow
+contract were read. Merge-tree diagnosed only the two documentation conflicts;
+no actual merge/rebase or main/protection changes were performed.
+
+Before implementation, specified the separator, hit-testing/native-scroll
+ancestry and visual acceptance criteria. Source inspection shows the right region
+has no independent leading border and the table's inherited pointer-events:none
+excludes ordinary cell hit testing. Chrome's actual Picker failure remains
+unreproduced without browser authorization. Changed the table into a sticky child
+inside the native scroll canvas; removed canvas aria-hidden and restored pointer
+hit testing. A logical-positioned theme-token pseudo-element supplies the right
+separator without layout changes or input interception. Core untouched.
+
+Added four Node/jsdom/Sass regression cases and an unexecuted bounded Playwright
+source for hit targets, themed boundary, both scrolling axes and inherited RTL.
+11 Core, 51 Playground and 9 policy tests passed; typechecks and standards passed
+(0 errors, 9 legacy warnings). A new Sass fixture's initial transformed-URL path
+failure was corrected, without changing assertions; full rerun passed. No local
+browser, build, server, performance or supervisor workload. PR #4's current scope
+prohibits native verification, verified before bounded checks. Trusted merged-main
+description code is exported only for local canonical-body validation.
+
+Final commit, current-head required CI status, description write outcome and full
+patch are supplied in the delivery report. No independent review approval or
+browser acceptance is invented. NOT MERGE READY. Performance HOLD; POC NO-GO.
+
+## 2026-10-24 — PR #5 review remediation
+
+Rechecked the clean isolated feature worktree and GitHub PR base/head/Draft state.
+Audited all 28 changed paths, Core math and invariants, identity/data access,
+geometry, React rendering, test assertions, Nx/package boundary and documentation.
+Confirmed the known ARIA defect against the WAI-ARIA increasing-column-index
+requirement. The default first/last pin preset masked arbitrary interleaved pins.
+Specified separate original and visual positions before changing Core metadata;
+stable IDs were preserved. No mounted-window renumbering or ID substitution.
+
+Other demonstrated defects: headers persisted in zero-width pinned regions while
+cells disappeared; no-column/unmeasured layouts emitted empty semantic rows;
+high-frequency `<output>` carried an implicit status role; inherited RTL conflicted
+with LTR-only scroll coordinates; sparse column arrays silently skipped entries.
+Updated the specification first, then fixed each with deterministic regressions.
+Extracted a small stateless CoreTable to exercise actual header/cell markup with
+interleaved pins and string row data. Core remains framework-independent.
+
+11 Core, 47 Playground and 9 policy tests passed serially. Focused React tests
+cover 7 cases and are included in the 47, not additional to them. Core/app
+typechecks and standards passed (0 errors, 9 pre-existing diagnostic warnings).
+Used installed Nx directly due the earlier pnpm discovery side effect; no
+dependency operation occurred in this remediation. Supervisor chat remained idle.
+No browser, Playwright execution, build, dev server, benchmark, performance or
+supervisor verification. DOM semantics are unit evidence, not AT/native layout
+acceptance. The canonical five-section PR text follows the separate description
+policy's published template headings, inspected read-only; none of that branch's
+unmerged implementation was imported. Publication and exact diff are recorded in
+the delivery report. Performance HOLD; production POC NO-GO.
+
+## 2026-10-24 — isolated Grid Core foundation (PR #5)
+
+Read principles/status/standards and Nx skills before implementation. Inspected
+PR #4 checkout and preserved six modified files plus the untracked runner.
+Fetched main and created `feature/grid-core` in a separate Documents/Codex
+worktree. Wrote Core specification and architecture decision before code.
+Separated pure indexed-data/geometry/window contracts from React browser work.
+Kept POC scheduling/instrumentation experimental. Implemented varying column
+width binary searches and shared fixed row geometry with bounded pinned regions.
+
+Added deterministic boundary/identity/invalid-input tests and independent small
+interval oracles. Self-review found division rounding could include a phantom
+row at fractional boundaries; corrected against multiplication boundaries and
+added regression coverage. Read-only React inspection uses lazy million-row data
+and explicitly unvalidated proportional scrolling, not production segmentation.
+
+Local Nx package files were authored after inspecting generator source; generator
+execution was not used. Existing installed packages were linked into isolated
+node_modules, excluding shared caches and workspace links. A `pnpm nx show`
+attempt unexpectedly entered supply-chain verification/network fetching; it was
+interrupted, reported fetches failed, and no Nx checks ran through that launcher.
+Subsequent commands invoked the installed Nx Node entry point directly. No
+dependency installation/update was completed or intentionally requested. This
+unexpected attempt is recorded rather than omitted. Sandbox rename/Git fixture
+failures were rerun with bounded escalation. See [review](GRID-CORE-REVIEW.md).
+
+Other agent's completed/idle state established before bounded checks. No browser,
+server, build, stress, benchmark, Stage 0, supervisor execution or policy change.
+Performance HOLD and production POC NO-GO remain. Self-review does not replace
+independent Tech Lead review. This journal is new on main; PR #4's separate journal
+was not copied or overwritten.
+
 ## 2026-10-24 — PR #6 hosted verification completed
 
 Pushed behavior-preserving regex corrections in `21fd06b`. CI run 40092392388 and

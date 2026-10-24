@@ -1,5 +1,10 @@
 # GRID-V1 — production foundation
 
+2026-10-24 scope update: the PR #5 request authorizes the narrower
+[Grid Core V1 foundation](GRID-CORE-V1.md) and isolated inspection demo. The rest
+of this proposed production renderer milestone, including full keyboard/focus
+and accessibility acceptance, stays deferred. POC-V1 is not declared validated.
+
 **Status:** Proposed; specification preparation authorized, production implementation not authorized.
 **Version:** 0.1
 **Date:** 2026-10-17

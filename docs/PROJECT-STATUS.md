@@ -1,5 +1,170 @@
 # DataGrid project status
 
+## PR #5 customizable pinned shadows — 2026-10-24
+
+NOT MERGE READY. Specified defaults, inherited consumer tokens and acceptance
+before implementation. Center-edge pseudo-elements paint soft centerward shadows
+only beside visible pins with hidden center content: left after scroll start,
+right before scroll end. No shadows for zero center/overflow or absent pins.
+Pinned regions retain isolated opaque clipping and single-owner solid separators;
+transparent vertical cell borders, centered content and native input stay intact.
+
+Public CSS properties cover color (theme text fallback), opacity (0.18), offset
+(2px), blur (6px), spread (0px) and full left/right box-shadow values. Ancestor
+overrides need no private classes or new React props. Opacity 0 disables both;
+side value `none` disables that side. See architecture usage examples.
+
+PASS: 81 Playground tests including 16 new cases, 9 engineering-policy tests;
+typecheck/standards/Core and final GitHub results are in the delivery report.
+Compiled CSS/DOM token tests establish wiring, not browser computed inheritance
+or paint. Browser source updated but NOT RUN. No local browser/build/server,
+benchmark/performance or supervisor execution; no dependencies or other branches
+changed. Browser compositing/softness/theme contrast, native scroll/Picker/AT and
+independent acceptance remain missing. Keep Draft/unmerged. Performance HOLD;
+Production POC NO-GO. Earlier sections retain historical evidence.
+
+## PR #5 clarified pinned-only vertical borders and centered content — 2026-10-24
+
+NOT MERGE READY. The user's second reference explicitly requires visible vertical
+rules only at pinned boundaries. This supersedes the earlier ordinary internal
+vertical-divider contract. Cells and headers now reserve transparent trailing
+borders, retaining width/padding and content-box geometry. Horizontal row rules
+and the stage frame remain visible. Removed per-cell suppression attributes and
+the now-unnecessary paint helper; pure owner selection, clipping/opaque surfaces
+and stacking stay. Body and headers share flex vertical centering with horizontal
+start alignment. Core, identity, ARIA and native scroll/hit testing are unchanged.
+
+The initial screenshot showed a center divider outside the one-pixel seam band.
+An intermediate clipped-adjacency design passed 69 tests before the user clarified
+that ordinary vertical borders should be absent. It was simplified before commit.
+Final checks: 65 Playground tests, 11 Core tests, both typechecks, 9 policy tests
+and standards PASS (0 errors/9 existing warnings). Replaced only obsolete per-cell
+suppression expectations with unconditional transparent vertical-border checks;
+retained owner, fractional-scroll, hit-testing, identity and ARIA regressions.
+No executed check failed. Browser source updated/typechecked but NOT RUN.
+No local browser/build/server, benchmark/performance or supervisor execution.
+PR #4's current task explicitly prohibits native verification; other worktrees
+and dependencies untouched. Final SHA, remote checks and canonical description
+outcome are in delivery artifacts. User screenshots are pre-fix evidence, not
+proof of corrected pixels. Actual glyph alignment, native scroll/Picker/AT and
+independent browser/review acceptance remain missing. Keep PR #5 Draft/unmerged.
+Performance HOLD. Production POC NO-GO. Earlier sections are historical.
+
+## PR #5 single-owner pinned boundaries and main integration — 2026-10-24
+
+NOT MERGE READY. Supersedes the integration blockers in the historical entries
+below. Latest fetched main `4f207d1` (merged PR #6) is integrated on the isolated
+feature branch by `05d6ad4`; both journal and status histories are preserved.
+Main and PR #4 were not modified. No rebase, force push or protection change.
+
+Specified before implementation: pinned edges own one-pixel separators; center
+border intervals touching reserved seam bands become transparent, retaining
+width/padding and all other internal borders. Both sides have clipped, isolated,
+opaque theme backing; touching pins have one seam owner. Renderer-only helpers
+cover fractional offsets, empty pins and viewport clipping. Core unchanged.
+Prior accessible native-scroll ancestry and pointer hit testing are retained.
+Explicit LTR coordinates work inside RTL hosts; native RTL grid scrolling is
+still deferred. Themes must supply an opaque surface for translucent cell fills.
+
+PASS locally on the integrated candidate: 11 Core tests, 65 Playground tests
+(14 new cases), 9 engineering-policy tests, 157 canonical-description/security
+tests, both typechecks and standards (0 errors, 9 existing warnings). No failures
+in this turn's bounded verification. New browser regression source is NOT RUN;
+neither unit tests nor existing hosted baseline checks prove painted seam,
+Chrome Picker, native scrolling or assistive-technology acceptance. No local
+build/server/browser, benchmarks, performance or supervisor execution.
+
+Final commit, GitHub checks and description-write outcome are in the delivery
+report. Independent browser and Tech Lead acceptance remain required. Historical
+records below retain their original evidence and are not current verification.
+Performance HOLD. Production POC NO-GO. Keep PR #5 Draft and unmerged.
+
+## PR #5 UI inspection / merge-readiness preparation — 2026-10-24
+
+NOT MERGE READY. Work isolated on `feature/grid-core` in
+`C:\Users\ofirr\Documents\Codex\data-grid-pr5-merge`; the earlier checkout is now
+on another branch and was preserved. Main fetched at `4f207d1` includes merged
+PR #6. Read-only merge-tree diagnosis finds an add/add AI-development-journal
+conflict and a project-status content conflict. No branch merge, rebase, force
+push, main modification or protection change was performed. Both histories need
+preservation in a separately authorized integration operation.
+
+Spec-first renderer fixes: explicit themed right pinned-region separator,
+hit-testable table nested inside the native scroll canvas, sticky viewport layer,
+and accessible canvas ancestry. Core API/geometry/identity/window algorithms
+unchanged. Native input is not replaced with custom wheel forwarding.
+
+PASS locally: 11 Core tests; 51 Playground tests including four new regression
+cases; 9 engineering policy tests; Core/Playground typechecks; standards with
+0 errors and 9 existing warnings. Initial new Sass-test fixture failed because
+Vite rewrote its asset URL; corrected to a filesystem path, all assertions kept,
+full suite rerun PASS. No existing test was weakened or removed.
+
+Browser/Playwright, Chrome Element Picker, painted separator/theme verification,
+native scrolling and assistive technology NOT RUN: current safety authorization
+does not cover them. No local build, server, performance or supervisor workload.
+PR #4's current read-only inspected scope explicitly excludes native verification;
+bounded local checks were sequential. Current-head CI/description publication
+results are recorded in the delivery report, not inferred from older green runs.
+See [merge-readiness record](GRID-CORE-MERGE-READINESS.md).
+Performance HOLD; production POC NO-GO.
+
+## PR #5 review remediation — 2026-10-24
+
+Audited the full 28-file PR at `369a878` against main `27b4f16`, then remediated
+in the existing isolated `feature/grid-core` worktree. PR #5 is open and Draft:
+https://github.com/ofir-rifo/data-grid/pull/5. No PR #4 or other worktree changes.
+
+Core now distinguishes stable column IDs, original `logicalIndex` and full-table
+`visualIndex`. React uses increasing visual ARIA positions, including gaps for
+virtualized columns. Sparse column arrays fail with RangeError. Fixed geometry,
+binary-search windows, pinned offsets and row identity contracts remain intact.
+
+Extracted the stateless inspection `CoreTable` to test interleaved pinning with
+actual React markup. Zero-width regions omit both headers/cells; no-column and
+unmeasured layouts expose no empty table rows. LTR is explicit; scrolling debug
+text is no longer an implicit live status. The default POC is unchanged.
+
+Current bounded results: 11 Core tests PASS; 47 Playground tests PASS (including
+7 new focused jsdom tests); 9 policy tests PASS; both typechecks PASS; standards
+PASS with 0 errors/9 existing warnings; whitespace PASS. Browser, Playwright,
+build, server, benchmark, performance and supervisor execution NOT RUN. No new
+dependency installation/update or pnpm fetching attempt during remediation.
+See [remediation report](GRID-CORE-REMEDIATION.md) for commands, scope and risks.
+Earlier results below are historical. Performance HOLD; production POC NO-GO.
+
+## Grid Core PR #5 milestone — 2026-10-24
+
+Authorized scope: framework-independent geometry/data foundation and React
+inspection demo, based only on main `27b4f16`. Dedicated worktree:
+`C:\Users\ofirr\Documents\Codex\data-grid-core`, branch `feature/grid-core`.
+No PR #4 code, changes, supervisor tooling or verification evidence imported.
+
+Implemented: strict generic indexed rows, stable IDs, immutable columns,
+fixed-height rows, variable column widths, pure 2D visible/render windows,
+pixel overscan, clamping and left/center/right clipping regions. Setup O(C), scroll
+O(log Ccenter), no row enumeration/cell matrix. See
+[specification](../specs/features/GRID-CORE-V1.md),
+[architecture](GRID-CORE-ARCHITECTURE.md) and [usage/verification](GRID-CORE-REVIEW.md).
+
+React inspection route: `/?demo=core`. Lazy million-row preset and capped physical
+canvas demonstrate coordinate contracts only. Production navigation,
+screen-reader acceptance, accurate large-scroll mapping and runtime performance
+remain unverified. Original POC remains the default route.
+
+2026-10-24 verification: Core unit tests 9 PASS; engineering policy tests 9 PASS;
+Core and full Playground typechecks PASS; standards PASS with 0 errors and 9
+existing warnings. Initial sandbox temporary-file/Git fixture failures were
+resolved by bounded escalated reruns. Browser, dev server, build, benchmarks,
+Stage 0 and supervisor verification NOT RUN. Exact commands: review record.
+
+PR #4 context inspected read-only: its agent completed verification and was idle
+before bounded checks. Its working status records failed launcher-timeout
+verification at draft head `6f1ea82`, pending local changes and incomplete native
+evidence. This is external state, not a dependency or reproduced result. Historical
+content below belongs to main and remains dated. Performance HOLD; production
+POC NO-GO. No POC exit decision is asserted.
+
 ## PR #6 hosted verification PASS — 2026-10-24
 
 Regex correction commit `21fd06b2828dcac2ac8568b81e71da7be272a6bb` passed both

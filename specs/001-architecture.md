@@ -1,5 +1,13 @@
 # DataGrid Architecture Specification
 
+PR #5 foundation addendum (2026-10-24): pure row/column geometry, pinned-region
+layout and logical render-window computation belong to `grid-core`.
+`grid-react` owns application of windows, browser scrolling, measurement,
+scheduling and DOM rendering. See [Grid Core V1](features/GRID-CORE-V1.md) and
+the [architecture decision](../docs/GRID-CORE-ARCHITECTURE.md). The isolated
+inspection demo is not production `grid-react`. POC validation remains pending;
+Performance HOLD and production POC NO-GO remain.
+
 **Status:** Draft  
 **Version:** 0.3
 **Date:** 2026-10-18
