@@ -2,6 +2,108 @@
 import { expect, test } from '@playwright/test';
 
 // Execution requires a separately authorized, bounded browser/server session.
+test('both pinned edges suppress coincident center borders while preserving internal dividers', async ({
+  page,
+}) => {
+  await page.goto('/?demo=core');
+  const scrollport = page.getByTestId('core-scrollport');
+  await page.getByTestId('core-canvas').evaluate((canvas) => {
+    const stage = canvas.closest<HTMLElement>('[dir="ltr"]');
+    if (!stage || !stage.parentElement) throw new Error('Missing stage');
+    stage.style.width = '400px';
+    stage.style.setProperty('--core-pinned-separator', 'rgb(210, 50, 90)');
+    stage.style.setProperty('--core-border', 'rgb(72, 82, 92)');
+    stage.style.setProperty('--core-surface', 'rgb(25, 30, 40)');
+    stage.style.setProperty('--core-cell', 'rgba(45, 50, 60, 0.8)');
+    stage.style.setProperty('--core-header', 'rgb(35, 40, 50)');
+  });
+  const centerWidth = () =>
+    page
+      .locator('[aria-rowindex="1"] [data-column-region="center"]')
+      .evaluate((region) => region.getBoundingClientRect().width);
+  await expect.poll(centerWidth).toBeGreaterThan(0);
+  await expect.poll(centerWidth).toBeLessThan(200);
+  for (const direction of ['ltr', 'rtl']) {
+    await page.getByTestId('core-canvas').evaluate((canvas, direction) => {
+      const stage = canvas.closest('[dir="ltr"]');
+      if (!stage?.parentElement) throw new Error('Missing stage parent');
+      stage.parentElement.dir = direction;
+    }, direction);
+    const width = await centerWidth();
+    await scrollport.evaluate((element, left) => {
+      element.scrollLeft = left;
+    }, 200 - width);
+    const edgeCell = page.locator('[aria-rowindex="1"] [data-column-id="c2"]');
+    await expect(edgeCell).toHaveAttribute(
+      'data-trailing-border',
+      'suppressed',
+    );
+    await expect(edgeCell).toHaveCSS(
+      'border-inline-end-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    await expect(
+      page.locator('[aria-rowindex="1"] [data-column-id="c1"]'),
+    ).toHaveCSS('border-inline-end-color', 'rgb(72, 82, 92)');
+    const sides = await scrollport.evaluate((element) =>
+      Array.from(
+        element.querySelectorAll<HTMLElement>(
+          '[aria-rowindex="1"] [data-column-region]',
+        ),
+        (region) => {
+          const style = getComputedStyle(region);
+          const line = getComputedStyle(region, '::after');
+          return {
+            region: region.dataset.columnRegion,
+            backing: style.backgroundColor,
+            isolation: style.isolation,
+            z: style.zIndex,
+            line: line.content,
+            width: line.width,
+            color: line.backgroundColor,
+            end: line.insetInlineEnd,
+            start: line.insetInlineStart,
+            input: line.pointerEvents,
+          };
+        },
+      ),
+    );
+    expect(sides).toMatchObject([
+      {
+        region: 'left',
+        backing: 'rgb(25, 30, 40)',
+        isolation: 'isolate',
+        z: '1',
+        width: '1px',
+        color: 'rgb(210, 50, 90)',
+        end: '0px',
+        input: 'none',
+      },
+      {
+        region: 'center',
+        backing: 'rgb(25, 30, 40)',
+        isolation: 'isolate',
+        z: '0',
+        line: 'none',
+      },
+      {
+        region: 'right',
+        backing: 'rgb(25, 30, 40)',
+        isolation: 'isolate',
+        z: '1',
+        width: '1px',
+        color: 'rgb(210, 50, 90)',
+        start: '0px',
+        input: 'none',
+      },
+    ]);
+  }
+  await page.getByRole('checkbox', { name: 'Pin first / last' }).uncheck();
+  await expect(page.locator('[data-trailing-border="suppressed"]')).toHaveCount(
+    0,
+  );
+});
+
 test('inspection hit targets, themed pinned separator and native scrolling remain aligned', async ({
   page,
 }) => {

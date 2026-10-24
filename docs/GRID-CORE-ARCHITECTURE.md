@@ -51,8 +51,17 @@ scroll canvas. Restoring pointer hit testing on a sibling overlay alone would
 leave cell input without a scrollport ancestor; native scrolling is preserved by
 DOM ownership instead of introducing synthetic wheel forwarding. The canvas no
 longer has aria-hidden, since it now owns the semantic table. Geometry and Core
-are unchanged. A right-region pseudo-element draws the themed leading boundary
-over cell backgrounds without occupying layout space or intercepting input.
+are unchanged. Region pseudo-elements own the inner pinned boundaries; cell
+borders whose one-pixel intervals touch those reserved boundary bands are made
+transparent. Clipping alone was insufficient: a center border could remain just
+inside its clip edge next to the pinned separator. Both regions now have opaque
+theme surfaces and isolated stacking, with center below pins. Internal dividers
+outside the boundary bands remain visible; no padding/width changes or extra DOM.
+When pins meet without center space, the right region alone owns the shared seam.
+The pure renderer helper uses numeric viewport intervals, stays outside Core and
+handles fractional scrolling without exact-equality or column-ID special cases.
+LTR is explicit on both table and canvas under either surrounding text direction;
+native RTL grid geometry is still deferred, not inferred from page-direction tests.
 Static/Sass/jsdom regressions pass; actual sticky layout, native scrolling, Chrome
 Element Picker and visual theme behavior require separately authorized browser
 verification before merge acceptance.

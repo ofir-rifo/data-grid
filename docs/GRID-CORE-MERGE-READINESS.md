@@ -1,5 +1,48 @@
 # PR #5 safe-merge preparation — 2026-10-24
 
+## Current single-owner boundary candidate
+
+NOT MERGE READY. This section supersedes historical integration/verification
+statements below. Main `4f207d1` is now integrated by normal feature-branch merge
+`05d6ad4`; journal/status conflicts retain both histories. Trusted PR #6 policy
+files are unchanged from main. Main and PR #4 remain untouched.
+
+Statically demonstrated cause: clipping leaves part of a center trailing border
+inside its region next to the pinned separator. At a fractional scroll position
+that partial pixel can combine with the pinned line. The fix assigns each inner
+edge one pinned-region owner and suppresses complete cell-border intervals
+intersecting its reserved one-pixel bands. Left and right are symmetric; when
+pins meet the right alone owns the seam. Empty/full-viewport pins have no inner
+separator. Border width and other internal dividers are retained. Regions have
+clipped children, isolated stacking and opaque theme backing. Core untouched.
+
+Changed source: `CoreTable.tsx`, `CoreDemo.module.scss`, new renderer-only
+`pinned-boundaries.ts`; regressions in its new unit suite, CoreTable and compiled
+SCSS suites; unexecuted browser cases in `e2e/core-inspection.spec.ts`. Specs:
+`specs/features/GRID-CORE-V1.md` and `docs/GRID-CORE-ARCHITECTURE.md`, updated
+before implementation. Status/journal preserve the previous work and limitations.
+
+Using the bounded Nx commands/environment recorded below: Core tests PASS (11),
+Playground PASS (65 in 11 files), standards-test PASS (9), both typechecks PASS,
+standards PASS (59 source/3 style files; 0 errors/9 existing warnings).
+Canonical parser/reporter/security suite PASS (157) using
+`node --test --test-concurrency=1 .github/scripts/pr-description.test.mjs .github/scripts/pr-description-reporter.test.mjs`.
+No test failure this turn, weakened assertion or dependency change. Whitespace
+and exact change-set self-review completed before committing. Delivery artifacts
+record final SHA, canonical body validation, GitHub status URLs and complete diff.
+
+NOT RUN: local browser/Playwright, build/server, actual painted separators,
+native scrolling, Chrome Element Picker, screen-reader acceptance, benchmarks,
+performance or supervisor verification. Existing hosted CI selects baseline
+browser tests, not the new core-inspection cases. LTR canvas behavior in RTL
+hosts is covered statically; native RTL grid coordinates remain deferred. Themes
+with translucent cells require an opaque `--core-surface`. Independent browser
+evidence and review acceptance remain mandatory even if required CI is green.
+
+Performance HOLD. Production POC NO-GO. Keep PR #5 Draft; do not merge.
+
+## Historical checkpoint before this correction
+
 Verdict: NOT MERGE READY. This record distinguishes verified source/DOM/style
 contracts from required browser and integration acceptance.
 

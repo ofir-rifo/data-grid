@@ -8,9 +8,16 @@ const css = compileString(
 ).css;
 
 function rule(selector: string): string {
-  const start = css.indexOf(`${selector} {`);
-  expect(start).toBeGreaterThanOrEqual(0);
-  return css.slice(start, css.indexOf('}', start) + 1);
+  const normalize = (value: string) => value.replace(/["']/g, '').trim();
+  const blocks = Array.from(css.matchAll(/([^{}]+)\{([^{}]*)\}/g))
+    .filter((match) =>
+      match[1]
+        .split(',')
+        .some((value) => normalize(value) === normalize(selector)),
+    )
+    .map((match) => match[2]);
+  expect(blocks.length).toBeGreaterThan(0);
+  return blocks.join('\n');
 }
 
 describe('compiled inspection styles (not browser hit-testing/paint evidence)', () => {
@@ -21,7 +28,8 @@ describe('compiled inspection styles (not browser hit-testing/paint evidence)', 
     expect(table).toContain('inset-inline-start: 0');
     expect(table).toContain('pointer-events: auto');
     expect(rule('.scrollport')).toContain('overflow: auto');
-    expect(rule('.cell,\n.header')).not.toContain('pointer-events: none');
+    expect(rule('.cell')).not.toContain('pointer-events: none');
+    expect(rule('.header')).not.toContain('pointer-events: none');
   });
 
   it('draws the themed region separator over children without intercepting input or resizing columns', () => {
@@ -37,5 +45,25 @@ describe('compiled inspection styles (not browser hit-testing/paint evidence)', 
     expect(boundary).toContain('pointer-events: none');
     expect(boundary).not.toMatch(/\b(?:border|padding):/);
     expect(rule('.region')).toContain('overflow: clip');
+  });
+
+  it('isolates both pinned surfaces and keeps normal internal borders with a color-only edge override', () => {
+    expect(rule('.leftBoundary::after')).toContain('inset-inline-end: 0');
+    expect(rule('.leftBoundary::after')).toContain('width: 1px');
+    expect(rule('.leftBoundary::after')).toContain('pointer-events: none');
+    const region = rule('.region');
+    expect(region).toContain('isolation: isolate');
+    expect(region).toContain('z-index: 0');
+    expect(region).toContain('var(--core-surface, var(--core-cell, #fff))');
+    expect(rule('.pinnedRegion')).toContain('z-index: 1');
+    expect(rule('.cell')).toContain(
+      'border-inline-end: 1px solid var(--core-border, #ccd4df)',
+    );
+    expect(rule('.header')).toContain(
+      'border-inline-end: 1px solid var(--core-border, #ccd4df)',
+    );
+    const suppressed = rule('.cell[data-trailing-border=suppressed]');
+    expect(suppressed).toContain('border-inline-end-color: transparent');
+    expect(suppressed).not.toMatch(/border(?:-inline-end)?(?:-width)?:/);
   });
 });

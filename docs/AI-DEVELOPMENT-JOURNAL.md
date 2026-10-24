@@ -1,5 +1,38 @@
 # AI development journal
 
+## 2026-10-24 — PR #5 single-owner seams and authorized main integration
+
+The latest request authorizes resolving main integration. Integrated `4f207d1`
+(PR #6) into the isolated feature branch with normal merge commit `05d6ad4`.
+Resolved only journal add/add and project-status conflicts, retaining both
+histories; trusted description-policy files match main. Main and other branches
+were untouched. All 157 canonical parser/reporter/security tests passed.
+
+Source inspection explains the newly reported duplicate: a clipped center-cell
+trailing border can survive just inside its clip edge beside the pinned line.
+The previous left boundary also relied on a cell border. Browser paint was not
+reproduced. Updated feature/architecture specs first, then added pure renderer
+interval helpers and matching header/body attributes: only a pinned region owns
+each seam; overlapping cell-border color is transparent without changing layout.
+Reserved bands handle fractional scrolling; internal borders outside them stay.
+Clipped isolated regions have opaque theme backing and explicit stacking. No
+extra DOM, dependency, Core change or synthetic input handling. Preserved native
+scroll ancestry, accessible canvas and pointer-events:auto. Both host directions
+are tested under the explicit LTR contract; native RTL grid support stays deferred.
+
+All checks passed on first execution this turn: Core 11, Playground 65 (14 new
+cases), engineering policy 9, both typechecks, standards with 0 errors/9 existing
+warnings, and whitespace checks. New bounded browser source is typechecked but
+NOT RUN. No browser, builds, servers, performance or supervisor workload ran
+locally. No existing assertion was removed to obtain a pass. Exact final SHA,
+remote CI and description-update outcome belong to the delivery report.
+
+Self-review: framework independence, identity/ARIA ordering, virtualization and
+row-source contracts unchanged; seam work is O(1) per rendered cell. Remaining
+risks are real-browser pixels/sticky scrolling/Picker/AT, opaque theme-surface
+requirements and independent acceptance. NOT MERGE READY. Performance HOLD;
+Production POC NO-GO. Earlier entries below are historical.
+
 ## 2026-10-24 — PR #5 separator, targeting and merge-readiness preparation
 
 Rechecked PR #5, latest main, PR #6 and all PR #5 review/comment endpoints. Created

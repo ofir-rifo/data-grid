@@ -6,6 +6,7 @@ import type {
   RowSource,
 } from '@org/grid-core';
 import styles from './CoreDemo.module.scss';
+import { getPinnedBoundary, suppressTrailingBorder } from './pinned-boundaries';
 
 const REGIONS: readonly ColumnRegion[] = ['left', 'center', 'right'];
 
@@ -54,8 +55,23 @@ export default function CoreTable<T>({
       return { ...getRow(source, index), index };
     },
   );
+  function regionClassName(region: ColumnRegion): string {
+    const boundary = getPinnedBoundary(region, window);
+    return [
+      styles['region'],
+      region !== 'center' ? styles['pinnedRegion'] : '',
+      boundary === 'start'
+        ? styles['rightBoundary']
+        : boundary === 'end'
+          ? styles['leftBoundary']
+          : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
   return (
     <div
+      dir="ltr"
       role="table"
       aria-label="Core virtual table"
       aria-rowcount={geometry.rowCount + 1}
@@ -82,7 +98,7 @@ export default function CoreTable<T>({
           <div
             role="presentation"
             key={region}
-            className={`${styles['region']} ${region === 'right' && window.regions.right.width > 0 ? styles['rightBoundary'] : ''}`}
+            className={regionClassName(region)}
             data-column-region={region}
             style={{
               left: window.regions[region].x,
@@ -98,6 +114,11 @@ export default function CoreTable<T>({
                   key={column.id}
                   data-column-id={column.id}
                   data-region={region}
+                  data-trailing-border={
+                    suppressTrailingBorder(region, column, window)
+                      ? 'suppressed'
+                      : undefined
+                  }
                   className={styles['header']}
                   style={{
                     left:
@@ -134,7 +155,7 @@ export default function CoreTable<T>({
               <div
                 role="presentation"
                 key={region}
-                className={`${styles['region']} ${region === 'right' && window.regions.right.width > 0 ? styles['rightBoundary'] : ''}`}
+                className={regionClassName(region)}
                 data-column-region={region}
                 style={{
                   left: window.regions[region].x,
@@ -150,6 +171,11 @@ export default function CoreTable<T>({
                       key={column.id}
                       data-column-id={column.id}
                       data-region={region}
+                      data-trailing-border={
+                        suppressTrailingBorder(region, column, window)
+                          ? 'suppressed'
+                          : undefined
+                      }
                       className={styles['cell']}
                       style={{
                         left:

@@ -30,6 +30,125 @@ const geometry = createGridGeometry({
 });
 
 describe('CoreTable semantics (jsdom only, no browser layout or AT claim)', () => {
+  it.each(['ltr', 'rtl'])(
+    'keeps one owner per boundary and internal dividers under a %s page',
+    (direction) => {
+      const viewport = { width: 120, height: 10 };
+      const initial = calculateGridWindow(geometry, {
+        ...viewport,
+        scrollTop: 0,
+        scrollLeft: 0,
+      });
+      const view = render(
+        <div dir={direction}>
+          <CoreTable
+            geometry={geometry}
+            window={initial}
+            viewport={viewport}
+            source={source}
+          />
+        </div>,
+      );
+      expect(view.getByRole('table').getAttribute('dir')).toBe('ltr');
+      expect(
+        view.container.querySelectorAll(`.${styles['leftBoundary']}`),
+      ).toHaveLength(2);
+      expect(
+        view.container.querySelectorAll(`.${styles['rightBoundary']}`),
+      ).toHaveLength(2);
+      for (const row of view.getAllByRole('row')) {
+        expect(
+          row
+            .querySelector('[data-column-id="c2"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBe('suppressed');
+        expect(
+          row
+            .querySelector('[data-column-id="c3"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBe('suppressed');
+        expect(
+          row
+            .querySelector('[data-column-id="c1"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBeNull();
+      }
+      const next = calculateGridWindow(geometry, {
+        ...viewport,
+        scrollTop: 0,
+        scrollLeft: 29.5,
+      });
+      view.rerender(
+        <div dir={direction}>
+          <CoreTable
+            geometry={geometry}
+            window={next}
+            viewport={viewport}
+            source={source}
+          />
+        </div>,
+      );
+      for (const row of view.getAllByRole('row')) {
+        expect(
+          row
+            .querySelector('[data-column-id="c1"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBe('suppressed');
+        expect(
+          row
+            .querySelector('[data-column-id="c4"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBe('suppressed');
+        expect(
+          row
+            .querySelector('[data-column-id="c3"]')
+            ?.getAttribute('data-trailing-border'),
+        ).toBeNull();
+      }
+    },
+  );
+
+  it('mounts one shared boundary when pins touch and none at a full pinned viewport edge', () => {
+    const viewport = { width: 60, height: 10 };
+    const window = calculateGridWindow(geometry, {
+      ...viewport,
+      scrollTop: 0,
+      scrollLeft: 0,
+    });
+    const view = render(
+      <CoreTable
+        geometry={geometry}
+        window={window}
+        viewport={viewport}
+        source={source}
+      />,
+    );
+    expect(
+      view.container.querySelectorAll(`.${styles['leftBoundary']}`),
+    ).toHaveLength(0);
+    expect(
+      view.container.querySelectorAll(`.${styles['rightBoundary']}`),
+    ).toHaveLength(2);
+    const full = { width: 20, height: 10 };
+    view.rerender(
+      <CoreTable
+        geometry={geometry}
+        window={calculateGridWindow(geometry, {
+          ...full,
+          scrollTop: 0,
+          scrollLeft: 0,
+        })}
+        viewport={full}
+        source={source}
+      />,
+    );
+    expect(
+      view.container.querySelectorAll(
+        `.${styles['leftBoundary']}, .${styles['rightBoundary']}`,
+      ),
+    ).toHaveLength(0);
+  });
+
   it('marks each exposed right boundary consistently without adding semantic cells', () => {
     const viewport = { width: 180, height: 20 };
     const window = calculateGridWindow(geometry, {

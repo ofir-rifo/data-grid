@@ -47,18 +47,33 @@
 
 .region {
   position: absolute;
+  z-index: 0;
+  isolation: isolate;
   overflow: clip;
+  background: var(--core-surface, var(--core-cell, #fff));
 }
 
+.pinnedRegion {
+  z-index: 1;
+}
+
+.leftBoundary::after,
 .rightBoundary::after {
   position: absolute;
   z-index: 1;
   inset-block: 0;
-  inset-inline-start: 0;
   width: 1px;
   background: var(--core-pinned-separator, var(--core-border, #ccd4df));
   pointer-events: none;
   content: '';
+}
+
+.leftBoundary::after {
+  inset-inline-end: 0;
+}
+
+.rightBoundary::after {
+  inset-inline-start: 0;
 }
 
 .cell,
@@ -67,11 +82,16 @@
   box-sizing: border-box;
   overflow: clip;
   padding: 6px 8px;
-  border-right: 1px solid var(--core-border, #ccd4df);
+  border-inline-end: 1px solid var(--core-border, #ccd4df);
   border-bottom: 1px solid var(--core-border, #ccd4df);
   background: var(--core-cell, #fff);
   white-space: nowrap;
   font-size: 13px;
+}
+
+.cell[data-trailing-border='suppressed'],
+.header[data-trailing-border='suppressed'] {
+  border-inline-end-color: transparent;
 }
 
 .header {

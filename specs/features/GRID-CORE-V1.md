@@ -127,14 +127,37 @@ the existing logical/physical mapping. The canvas must not hide its table from
 the accessibility tree. Chrome Element Picker behavior requires browser evidence;
 static removal of hit-test exclusion alone is not a browser acceptance result.
 
-A visible right pinned region draws a one-pixel separator at its own leading
-edge in both header and body rows, independent of clipped center-cell borders.
-Use logical positioning within the explicit LTR canvas. The separator uses
+A pinned region owns its applicable inner boundary in both header and body rows:
+left pinning draws at its trailing edge and right pinning at its leading edge.
+Each separator is one CSS pixel. If the center collapses and visible pins meet,
+the right region alone owns their shared seam. A pinned region filling the whole
+viewport has no inner separator; empty/zero-width pins have none. Use logical
+CSS positioning within the explicit LTR coordinate canvas. The separator uses
 `--core-pinned-separator`, falling back to `--core-border` then the default border
 color. It overlays content without changing column widths/offsets, is clipped to
-the region and cannot intercept pointer events. Omit it for unpinned/zero-width
-right regions. Full RTL virtualization remains deferred; an RTL surrounding page
-must not change this demo's explicit LTR coordinate contract.
+the region and cannot intercept pointer events.
+
+Cells retain their one-pixel trailing internal borders. The renderer suppresses
+the complete cell border when its pixel interval intersects a reserved boundary
+band, rather than painting another separator. For the center, reserve its first
+pixel when a left pin is visible and its last pixel when a right pin is visible.
+For the left pinned region reserve its last pixel (including a clipped viewport
+edge); for the right reserve its first pixel only when it owns an inner seam.
+The test is interval overlap, not equality with a column index or rounded scroll
+position; fractional offsets and partially clipped borders are covered. Internal
+borders outside those one-pixel bands remain unchanged. Suppression changes only
+border color to transparent, retaining border width, padding and column geometry.
+
+Each region clips its own children, establishes an isolated stacking context and
+has an opaque themed backing surface. Center content stacks below pinned
+regions. `--core-surface` supplies that backing, falling back to `--core-cell` then
+white; themes must provide an opaque surface (even if cell fills are translucent).
+No new DOM layer or broad removal of internal dividers. This prevents a center
+cell border/background from becoming a second pinned-edge owner. The table
+itself declares LTR as well as the scroll canvas, so the contract also holds when
+embedded in an RTL page. Logical start/end CSS keeps the edge rules directional;
+native RTL grid coordinates and scrolling remain an explicitly deferred feature,
+not a claim of RTL grid support from inherited-page tests.
 No sorting, filtering, selection, editing, grouping, variable-height rows,
 fetching, full plugin system or production navigation in this milestone.
 
@@ -157,8 +180,12 @@ restrictions as an additional boundary check.
 Separator/hit-testing acceptance: bounded DOM unit tests assert native scroll
 ancestry, accessible table ownership, matching header/body boundary classes,
 zero-width/unpinned omission, and uncancelled pointer/wheel event propagation.
+Pure renderer regression cases cover both boundary owners, collapsed-center
+shared seams, full-viewport pinning, fractional border-band intersections and
+internal dividers that must remain. DOM cases inspect both header/cell border
+suppression under LTR/RTL hosts, before/after horizontal window changes.
 Compiled-SCSS contract tests check sticky offsets, hit testing, themed separator
-positioning and no geometry-changing border. Separately authorized browser tests
+positioning, surface/stacking/clipping, and no geometry-changing border. Separately authorized browser tests
 must check actual hit targets, native scrolling over cells, pinned alignment and
 separator style/placement before/after scrolling, with theme overrides and an
 RTL surrounding page. jsdom/static Sass checks cannot satisfy those visual/native

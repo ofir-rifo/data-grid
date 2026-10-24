@@ -1,5 +1,34 @@
 # DataGrid project status
 
+## PR #5 single-owner pinned boundaries and main integration — 2026-10-24
+
+NOT MERGE READY. Supersedes the integration blockers in the historical entries
+below. Latest fetched main `4f207d1` (merged PR #6) is integrated on the isolated
+feature branch by `05d6ad4`; both journal and status histories are preserved.
+Main and PR #4 were not modified. No rebase, force push or protection change.
+
+Specified before implementation: pinned edges own one-pixel separators; center
+border intervals touching reserved seam bands become transparent, retaining
+width/padding and all other internal borders. Both sides have clipped, isolated,
+opaque theme backing; touching pins have one seam owner. Renderer-only helpers
+cover fractional offsets, empty pins and viewport clipping. Core unchanged.
+Prior accessible native-scroll ancestry and pointer hit testing are retained.
+Explicit LTR coordinates work inside RTL hosts; native RTL grid scrolling is
+still deferred. Themes must supply an opaque surface for translucent cell fills.
+
+PASS locally on the integrated candidate: 11 Core tests, 65 Playground tests
+(14 new cases), 9 engineering-policy tests, 157 canonical-description/security
+tests, both typechecks and standards (0 errors, 9 existing warnings). No failures
+in this turn's bounded verification. New browser regression source is NOT RUN;
+neither unit tests nor existing hosted baseline checks prove painted seam,
+Chrome Picker, native scrolling or assistive-technology acceptance. No local
+build/server/browser, benchmarks, performance or supervisor execution.
+
+Final commit, GitHub checks and description-write outcome are in the delivery
+report. Independent browser and Tech Lead acceptance remain required. Historical
+records below retain their original evidence and are not current verification.
+Performance HOLD. Production POC NO-GO. Keep PR #5 Draft and unmerged.
+
 ## PR #5 UI inspection / merge-readiness preparation — 2026-10-24
 
 NOT MERGE READY. Work isolated on `feature/grid-core` in
